@@ -1,0 +1,156 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    commentstyle=\color{green!60!black},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{white},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    tabsize=2,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    escapeinside={\%*}{*)}
+}
+
+\begin{document}
+
+\title{Simulação e Controle de um Motor Síncrono de Ímãs Permanentes usando Controle Orientado a Campo\\
+}
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Felipe Lenschow}
+\IEEEauthorblockA{\textit{Programa de pós graduação em engenharia elétrica} \\
+\textit{Universidade do Estado de Santa Catarina}\\
+Joinville, Santa Catarina, Brasil \\
+felipe.lenschow@edu.udesc.br}
+}
+
+\maketitle
+
+\begin{abstract}
+Este artigo apresenta a modelagem e simulação de um sistema de acionamento de Motor Síncrono de Ímãs Permanentes (PMSM) utilizando Controle Orientado a Campo (FOC). O modelo matemático do PMSM no referencial dq é derivado, e uma estratégia de controle empregando controladores Proporcional-Integral (PI) para regulação de velocidade e corrente é implementada. A simulação é desenvolvida em Python, permitindo uma análise modular e flexível do comportamento dinâmico do motor sob condições variadas de carga e velocidade. Os resultados demonstram a eficácia da estratégia FOC em manter um controle preciso de velocidade e geração eficiente de torque.
+\end{abstract}
+
+\begin{IEEEkeywords}
+PMSM, Controle Orientado a Campo, Simulação, Python, Acionamento de Motor
+\end{IEEEkeywords}
+
+\section{Introdução}
+Motores Síncronos de Ímãs Permanentes (PMSMs) são amplamente utilizados em aplicações industriais, veículos elétricos e robótica devido à sua alta eficiência, alta densidade de potência e excelente desempenho dinâmico. Para alcançar um controle de alto desempenho, o Controle Orientado a Campo (FOC) é comumente empregado. O FOC permite o controle independente de fluxo e torque transformando as correntes trifásicas do estator para um referencial girante (referencial dq) alinhado com o fluxo do rotor \cite{b1}.
+
+Este artigo detalha o desenvolvimento de um ambiente de simulação para um sistema de acionamento PMSM. A simulação inclui a física do motor, o inversor de fonte de tensão e o algoritmo FOC. O objetivo é fornecer uma compreensão clara da dinâmica do sistema e validar a estratégia de controle através de simulação numérica.
+
+\section{Modelo do Sistema}
+
+\subsection{Modelo Matemático do PMSM}
+O modelo dinâmico do PMSM é estabelecido no referencial girante síncrono dq. As equações elétricas são dadas por:
+
+\begin{equation}
+    V_d = R_s I_d + L_d \frac{dI_d}{dt} - \omega_e L_q I_q
+    \label{eq:vd}
+\end{equation}
+
+\begin{equation}
+    V_q = R_s I_q + L_q \frac{dI_q}{dt} + \omega_e L_d I_d + \omega_e \lambda_m
+    \label{eq:vq}
+\end{equation}
+
+onde $V_d, V_q$ são as tensões do estator, $I_d, I_q$ são as correntes do estator, $R_s$ é a resistência do estator, $L_d, L_q$ são as indutâncias dos eixos d e q, $\omega_e$ é a velocidade angular elétrica, e $\lambda_m$ é o fluxo concatenado do ímã permanente.
+
+O torque eletromagnético $T_e$ produzido pelo motor é:
+
+\begin{equation}
+    T_e = \frac{3}{2} P \left[ \lambda_m I_q + (L_d - L_q) I_d I_q \right]
+    \label{eq:te}
+\end{equation}
+
+onde $P$ é o número de pares de polos. Para um PMSM de montagem superficial (SPMSM), $L_d \approx L_q$, e a equação de torque simplifica para $T_e = \frac{3}{2} P \lambda_m I_q$.
+
+A dinâmica mecânica é descrita por:
+
+\begin{equation}
+    J \frac{d\omega_m}{dt} = T_e - T_L - B \omega_m - T_c
+    \label{eq:mech}
+\end{equation}
+
+onde $J$ é o momento de inércia, $\omega_m$ é a velocidade mecânica, $T_L$ é o torque de carga, $B$ é o coeficiente de atrito viscoso, e $T_c$ é o torque de atrito de Coulomb.
+
+\subsection{Modelo do Inversor}
+O Inversor de Fonte de Tensão (VSI) trifásico é modelado idealmente, assumindo que as tensões de referência geradas pelo controlador são aplicadas com precisão aos terminais do motor, limitadas apenas pela tensão do barramento CC $V_{bus}$. Os limites da Modulação por Largura de Pulso Vetorial Espacial (SVPWM) são considerados saturando a magnitude do vetor de tensão para $V_{bus}/\sqrt{3}$.
+
+\section{Estratégia de Controle}
+A estratégia FOC é implementada com uma estrutura de controle em cascata.
+
+\subsection{Malha de Controle de Corrente}
+Dois controladores PI internos regulam as correntes $I_d$ e $I_q$. A referência de $I_d$ é definida como zero ($I_d^* = 0$) para maximizar o torque por ampère para o modelo SPMSM. A referência de $I_q$ é fornecida pela malha externa de velocidade. Termos de desacoplamento são calculados para compensar os efeitos de acoplamento cruzado entre os eixos d e q mostrados em \eqref{eq:vd} e \eqref{eq:vq}.
+
+\subsection{Malha de Controle de Velocidade}
+Um controlador PI externo regula a velocidade do motor. O erro entre a velocidade de referência $\omega_{ref}$ e a velocidade medida $\omega_m$ aciona o controlador PI para gerar a corrente de torque de referência $I_q^*$. A saída do controlador de velocidade é saturada para limitar a corrente máxima e proteger o motor e o inversor.
+
+\section{Resultados da Simulação}
+A simulação foi realizada utilizando Python. Os parâmetros do motor utilizados são: $P=21$, $R_s=4.485 \Omega$, $L_d=L_q=54.8$ mH, $\lambda_m=0.201$ Wb, $J=0.1444$ kg$\cdot$m$^2$, $B=0.0057$ Nms/rad.
+
+O perfil de simulação consiste em:
+\begin{itemize}
+    \item $t=0.0s$: Início em 40 RPM.
+    \item $t=0.2s$: Degrau de torque de carga de 20 Nm aplicado.
+    \item $t=0.4s$: Degrau de referência de velocidade para 80 RPM.
+    \item $t=0.6s$: Degrau de referência de velocidade de volta para 40 RPM.
+    \item $t=0.8s$: Torque de carga removido.
+\end{itemize}
+
+A Fig. \ref{fig:results} mostra a resposta do sistema.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\columnwidth]{sim_results.png}}
+\caption{Resultados da simulação mostrando Velocidade, Torque e Correntes ($I_d, I_q$).}
+\label{fig:results}
+\end{figure}
+
+O controlador de velocidade rastreia a referência de RPM com precisão e mínimo sobressinal. Quando o torque de carga é aplicado em $t=0.2s$, observa-se uma pequena queda de velocidade, que é rapidamente rejeitada pelo controlador à medida que $I_q$ aumenta para gerar o torque eletromagnético necessário. A corrente $I_d$ é mantida em zero, garantindo uma operação eficiente.
+
+\section{Conclusão}
+Uma simulação completa de um acionamento PMSM usando FOC foi apresentada. A implementação modular em Python permite testes fáceis de diferentes parâmetros de controle e características do motor. Os resultados confirmam a robustez do esquema FOC em lidar com distúrbios de carga e rastrear referências de velocidade.
+
+\appendices
+\section{Código da Simulação}
+Os códigos fonte da simulação desenvolvida em Python são apresentados a seguir.
+
+\subsection{PMSMMotor.py}
+\lstinputlisting{../Sim/PMSMMotor.py}
+
+\subsection{FOCController.py}
+\lstinputlisting{../Sim/FOCController.py}
+
+\subsection{Inverter.py}
+\lstinputlisting{../Sim/Inverter.py}
+
+\subsection{Sensors.py}
+\lstinputlisting{../Sim/Sensors.py}
+
+\subsection{Simulate.py}
+\lstinputlisting{../Sim/Simulate.py}
+
+\begin{thebibliography}{00}
+\bibitem{b1} F. Blaschke, "The principle of field orientation as applied to the new TRANSVECTOR closed-loop control system for rotating-field machines," Siemens Review, vol. 39, no. 5, pp. 217-220, 1972.
+\end{thebibliography}
+
+\end{document}

@@ -44,23 +44,23 @@ class PMSMMotor:
         Vq_ref = (2.0/3.0) * (-Va * sin_t - Vb * sin_t_m - Vc * sin_t_p)
 
         # Constants that depend on speed (We)
-        g1 = 1 - (self.Ts * (self.Rs / self.Ld))
-        g2 = (We * self.Lq * self.Ts) / self.Ld
-        g3 = -We * self.Ld * self.Ts / self.Lq
-        g4 = 1 - self.Rs * self.Ts / self.Lq
-        h1 = self.Ts / self.Ld
-        h2 = self.Ts / self.Lq
+        g11 = 1 - (self.Ts * (self.Rs / self.Ld))
+        g12 = (We * self.Lq * self.Ts) / self.Ld
+        g21 = -We * self.Ld * self.Ts / self.Lq
+        g22 = 1 - self.Rs * self.Ts / self.Lq
+        h11 = self.Ts / self.Ld
+        h22 = self.Ts / self.Lq
         i2 = -We * self.Lambda_m * self.Ts / self.Lq
 
         # Calculate next current states based on Applied Voltages
-        Id_next = g1 * self.Id + g2 * self.Iq + h1 * Vd_ref
-        Iq_next = g3 * self.Id + g4 * self.Iq + h2 * Vq_ref + i2
+        Id_next = g11 * self.Id + g12 * self.Iq + h11 * Vd_ref
+        Iq_next = g21 * self.Id + g22 * self.Iq + h22 * Vq_ref + i2
         
         self.Id = Id_next
         self.Iq = Iq_next
         
         # Torque Calculation
-        Te = 1.5 * self.Npp * (self.Lambda_m * self.Iq + (self.Ld - self.Lq) * self.Id * self.Iq)
+        Te = 1.5 * self.Npp * self.Iq * (self.Lambda_m + (self.Ld - self.Lq) * self.Id)
         
         # Mechanical Dynamics (Euler Integration)
         # Handle Coulomb friction direction

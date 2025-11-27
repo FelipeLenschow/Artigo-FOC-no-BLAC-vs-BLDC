@@ -18,13 +18,12 @@ if __name__ == "__main__":
     inverter = Inverter()
     sensors = Sensors()
     
-    # Time array
-    t_array = np.arange(0, t_end, Ts)
-    num_steps = len(t_array)
+    # Time settings
+    num_steps = int(t_end / Ts)
 
     # Storage for plotting
     history = {
-        'time': t_array,
+        'time': np.zeros(num_steps),
         'rpm_ref': np.zeros(num_steps),
         'rpm_act': np.zeros(num_steps),
         'Iq': np.zeros(num_steps),
@@ -36,7 +35,12 @@ if __name__ == "__main__":
 
     print("Starting Simulation...")
 
-    for k, t in enumerate(t_array):
+    t = 0.0
+    for k in range(num_steps):
+        # Update time
+        t = k * Ts
+        history['time'][k] = t
+
         # ---------------------------------------------------------
         # 1. INPUTS & PROFILE
         # ---------------------------------------------------------
