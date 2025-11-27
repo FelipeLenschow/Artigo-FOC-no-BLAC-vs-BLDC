@@ -60,29 +60,70 @@ Este artigo detalha o desenvolvimento de um ambiente de simulação para um sist
 
 \section{Modelo do Sistema}
 
-\subsection{Modelo Matemático do PMSM}
-O modelo dinâmico do PMSM é estabelecido no referencial girante síncrono dq. As equações elétricas são dadas por:
+\subsection{Modelo Matemático do BLDC}
+O modelo dinâmico do motor BLDC pode ser derivado a partir das equações de tensão de fase. Conforme descrito em \cite{b2}, as tensões nos enrolamentos do estator são definidas por:
 
 \begin{equation}
-    V_d = R_s I_d + L_d \frac{dI_d}{dt} - \omega_e L_q I_q
-    \label{eq:vd}
+    \begin{bmatrix} v_a \\ v_b \\ v_c \end{bmatrix} = 
+    \begin{bmatrix} R_s & 0 & 0 \\ 0 & R_s & 0 \\ 0 & 0 & R_s \end{bmatrix} 
+    \begin{bmatrix} i_a \\ i_b \\ i_c \end{bmatrix} + 
+    \frac{d}{dt} \begin{bmatrix} \psi_a \\ \psi_b \\ \psi_c \end{bmatrix}
+    \label{eq:vabc}
+\end{equation}
+
+onde $\psi$ representa o fluxo total concatenado em cada enrolamento, dado por:
+
+\begin{equation}
+    \begin{bmatrix} \psi_a \\ \psi_b \\ \psi_c \end{bmatrix} = 
+    \mathbf{L}_{abc} \begin{bmatrix} i_a \\ i_b \\ i_c \end{bmatrix} + 
+    \begin{bmatrix} \psi_{am} \\ \psi_{bm} \\ \psi_{cm} \end{bmatrix}
+\end{equation}
+
+Assumindo um estator simétrico e equilibrado onde a indutância própria é $L_s$ e a mútua é $M_s$, e negligenciando a variação da indutância com a posição do rotor ($L_m = 0$), a matriz de indutância $\mathbf{L}_{abc}$ é constante:
+
+\begin{equation}
+    \mathbf{L}_{abc} = \begin{bmatrix} L_s & M_s & M_s \\ M_s & L_s & M_s \\ M_s & M_s & L_s \end{bmatrix}
+\end{equation}
+
+Para simplificar a análise e o controle, aplica-se a Transformada de Park para converter as variáveis do referencial trifásico ($abc$) para o referencial síncrono girante ($dq0$). A transformação é definida por $\mathbf{x}_{dq0} = \mathbf{T} \mathbf{x}_{abc}$, onde $\mathbf{T}$ é a matriz de transformação.
+
+Substituindo $\mathbf{x}_{abc} = \mathbf{T}^{-1} \mathbf{x}_{dq0}$ na equação de tensão \eqref{eq:vabc}:
+
+\begin{equation}
+    \mathbf{T}^{-1} \mathbf{v}_{dq0} = \mathbf{R} \mathbf{T}^{-1} \mathbf{i}_{dq0} + \mathbf{L}_{abc} \frac{d}{dt} (\mathbf{T}^{-1} \mathbf{i}_{dq0}) + \mathbf{e}_{abc}
+\end{equation}
+
+Multiplicando ambos os lados por $\mathbf{T}$:
+
+\begin{equation}
+    \mathbf{v}_{dq0} = \mathbf{R} \mathbf{i}_{dq0} + \mathbf{T} \mathbf{L}_{abc} \frac{d}{dt} (\mathbf{T}^{-1} \mathbf{i}_{dq0}) + \mathbf{T} \mathbf{e}_{abc}
+\end{equation}
+
+Expandindo a derivada do produto $\frac{d}{dt} (\mathbf{T}^{-1} \mathbf{i}_{dq0}) = \mathbf{T}^{-1} \frac{d\mathbf{i}_{dq0}}{dt} + \frac{d\mathbf{T}^{-1}}{dt} \mathbf{i}_{dq0}$:
+
+\begin{equation}
+    \mathbf{v}_{dq0} = \mathbf{R} \mathbf{i}_{dq0} + \mathbf{T} \mathbf{L}_{abc} \mathbf{T}^{-1} \frac{d\mathbf{i}_{dq0}}{dt} + \mathbf{T} \mathbf{L}_{abc} \frac{d\mathbf{T}^{-1}}{dt} \mathbf{i}_{dq0} + \mathbf{e}_{dq0}
+\end{equation}
+
+A matriz de indutância no referencial dq é diagonal para uma máquina de polos lisos, com $L_d = L_q = L_s - M_s$. O termo $\mathbf{T} \mathbf{L}_{abc} \frac{d\mathbf{T}^{-1}}{dt}$ resulta nas tensões de acoplamento devido à velocidade.
+
+Finalmente, as equações de estado para as correntes $I_d$ e $I_q$ são obtidas isolando as derivadas:
+
+\begin{equation}
+    \frac{dI_d}{dt} = \frac{1}{L_d} (V_d - R_s I_d + \omega_e L_q I_q)
 \end{equation}
 
 \begin{equation}
-    V_q = R_s I_q + L_q \frac{dI_q}{dt} + \omega_e L_d I_d + \omega_e \lambda_m
-    \label{eq:vq}
+    \frac{dI_q}{dt} = \frac{1}{L_q} (V_q - R_s I_q - \omega_e L_d I_d - \omega_e \lambda_m)
 \end{equation}
 
-onde $V_d, V_q$ são as tensões do estator, $I_d, I_q$ são as correntes do estator, $R_s$ é a resistência do estator, $L_d, L_q$ são as indutâncias dos eixos d e q, $\omega_e$ é a velocidade angular elétrica, e $\lambda_m$ é o fluxo concatenado do ímã permanente.
+Note que para o BLDC com fluxo trapezoidal, o termo de força contra-eletromotriz $\mathbf{e}_{dq0}$ conteria harmônicos, mas para fins de controle FOC fundamental, aproxima-se para o modelo senoidal acima.
 
-O torque eletromagnético $T_e$ produzido pelo motor é:
+O torque eletromagnético é dado por:
 
 \begin{equation}
-    T_e = \frac{3}{2} P \left[ \lambda_m I_q + (L_d - L_q) I_d I_q \right]
-    \label{eq:te}
+    T_e = \frac{3}{2} P (\lambda_m I_q + (L_d - L_q) I_d I_q)
 \end{equation}
-
-onde $P$ é o número de pares de polos. Para um PMSM de montagem superficial (SPMSM), $L_d \approx L_q$, e a equação de torque simplifica para $T_e = \frac{3}{2} P \lambda_m I_q$.
 
 A dinâmica mecânica é descrita por:
 
@@ -151,6 +192,7 @@ Os códigos fonte da simulação desenvolvida em Python são apresentados a segu
 
 \begin{thebibliography}{00}
 \bibitem{b1} F. Blaschke, "The principle of field orientation as applied to the new TRANSVECTOR closed-loop control system for rotating-field machines," Siemens Review, vol. 39, no. 5, pp. 217-220, 1972.
+\bibitem{b2} MathWorks, "BLDC - Three-winding brushless direct current motor with trapezoidal flux distribution," [Online]. Available: https://www.mathworks.com/help/sps/ref/bldc.html.
 \end{thebibliography}
 
 \end{document}
