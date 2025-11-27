@@ -1,5 +1,14 @@
-Tex/paper.aux
-Tex/paper.fdb_latexmk
-Tex/paper.fls
-Tex/paper.log
-Tex/paper.synctex.gz
+# LaTeX
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+*.out
+*.toc
+*.bbl
+*.blg
+
+# Python
+__pycache__/
+*.py[cod]
