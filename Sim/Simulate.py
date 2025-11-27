@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from PMSMMotor import PMSMMotor
+from BLDCMotor import BLDCMotor
 from FOCController import FOCController
 from Inverter import Inverter
 from Sensors import Sensors
@@ -13,7 +14,8 @@ if __name__ == "__main__":
     t_end = 1.0
     
     # Initialize Modules
-    motor = PMSMMotor(Ts)
+    # motor = PMSMMotor(Ts)
+    motor = BLDCMotor(Ts)
     controller = FOCController(Ts)
     inverter = Inverter()
     sensors = Sensors()
@@ -100,7 +102,7 @@ if __name__ == "__main__":
     ax1.plot(data['time'], data['rpm_ref'], 'r--', label='RPM Ref')
     ax1.plot(data['time'], data['rpm_act'], 'b-', label='RPM Actual')
     ax1.set_ylabel('Speed (RPM)')
-    ax1.set_title('PMSM FOC Simulation')
+    ax1.set_title('BLDC FOC Simulation')
     ax1.legend()
     ax1.grid(True)
 
@@ -114,8 +116,6 @@ if __name__ == "__main__":
     # Plot 3: Currents and Voltage Input
     ax3.plot(data['time'], data['Iq'], 'c-', label='Iq (A)')
     ax3.plot(data['time'], data['Id'], 'm-', label='Id (A)')
-    # Scaling Vbus to fit on plot for visualization
-    ax3.plot(data['time'], data['Vbus']/10, 'y-', alpha=0.3, label='Vbus Input / 10 (V)')
     ax3.set_ylabel('Current (A)')
     ax3.set_xlabel('Time (s)')
     ax3.legend()

@@ -105,19 +105,40 @@ Expandindo a derivada do produto $\frac{d}{dt} (\mathbf{T}^{-1} \mathbf{i}_{dq0}
     \mathbf{v}_{dq0} = \mathbf{R} \mathbf{i}_{dq0} + \mathbf{T} \mathbf{L}_{abc} \mathbf{T}^{-1} \frac{d\mathbf{i}_{dq0}}{dt} + \mathbf{T} \mathbf{L}_{abc} \frac{d\mathbf{T}^{-1}}{dt} \mathbf{i}_{dq0} + \mathbf{e}_{dq0}
 \end{equation}
 
-A matriz de indutância no referencial dq é diagonal para uma máquina de polos lisos, com $L_d = L_q = L_s - M_s$. O termo $\mathbf{T} \mathbf{L}_{abc} \frac{d\mathbf{T}^{-1}}{dt}$ resulta nas tensões de acoplamento devido à velocidade.
-
-Finalmente, as equações de estado para as correntes $I_d$ e $I_q$ são obtidas isolando as derivadas:
+Substituindo $\mathbf{v}_{rot}$ na equação de estado e expandindo para os componentes escalares $d$ e $q$ (assumindo $L_{dq0}$ diagonal), obtemos a forma matricial explícita:
 
 \begin{equation}
-    \frac{dI_d}{dt} = \frac{1}{L_d} (V_d - R_s I_d + \omega_e L_q I_q)
+    \frac{d\mathbf{i}_{dq0}}{dt} = \mathbf{A} \mathbf{i}_{dq0} + \mathbf{B} (\mathbf{v}_{dq0} - \mathbf{e}_{dq0})
+\end{equation}
+
+onde as matrizes de estado $\mathbf{A}$ e de entrada $\mathbf{B}$ são dadas por:
+
+\begin{equation}
+    \mathbf{A} = \begin{bmatrix} -\frac{R_s}{L_d} & \omega_e \frac{L_q}{L_d} \\ -\omega_e \frac{L_d}{L_q} & -\frac{R_s}{L_q} \end{bmatrix}, \quad
+    \mathbf{B} = \begin{bmatrix} \frac{1}{L_d} & 0 \\ 0 & \frac{1}{L_q} \end{bmatrix}
+\end{equation}
+
+Isolando as derivadas para cada componente:
+
+\begin{equation}
+    \frac{dI_d}{dt} = \frac{1}{L_d} (V_d - R_s I_d + \omega_e L_q I_q - e_d)
 \end{equation}
 
 \begin{equation}
-    \frac{dI_q}{dt} = \frac{1}{L_q} (V_q - R_s I_q - \omega_e L_d I_d - \omega_e \lambda_m)
+    \frac{dI_q}{dt} = \frac{1}{L_q} (V_q - R_s I_q - \omega_e L_d I_d - e_q)
 \end{equation}
 
-Note que para o BLDC com fluxo trapezoidal, o termo de força contra-eletromotriz $\mathbf{e}_{dq0}$ conteria harmônicos, mas para fins de controle FOC fundamental, aproxima-se para o modelo senoidal acima.
+Para o motor BLDC, a força contra-eletromotriz no referencial dq ($\mathbf{e}_{dq0}$) não é constante, mas sim dependente da posição do rotor devido à distribuição trapezoidal do fluxo. As componentes $e_d$ e $e_q$ são obtidas pela transformação direta das forças contra-eletromotrizes de fase $e_a, e_b, e_c$:
+
+\begin{equation}
+    e_d = \frac{2}{3} [e_a \cos(\theta_e) + e_b \cos(\theta_e - \frac{2\pi}{3}) + e_c \cos(\theta_e + \frac{2\pi}{3})]
+\end{equation}
+
+\begin{equation}
+    e_q = \frac{2}{3} [-e_a \sin(\theta_e) - e_b \sin(\theta_e - \frac{2\pi}{3}) - e_c \sin(\theta_e + \frac{2\pi}{3})]
+\end{equation}
+
+onde $e_a, e_b, e_c$ são funções trapezoidais da posição do rotor. O termo $e_q$ apresenta ondulações características (harmônicos de ordem $6k$) em vez de ser um valor DC puro como no PMSM senoidal.
 
 O torque eletromagnético é dado por:
 
