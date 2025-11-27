@@ -83,7 +83,7 @@ def run_simulation_and_save_plot():
         # ---------------------------------------------------------
         # 5. MOTOR PHYSICS STEP
         # ---------------------------------------------------------
-        Te = motor.physics_step(Va, Vb, Vc, Tload)
+        Te = motor.physics_step(Va, Vb, Vc, Tload, Ia, Ib, Ic)
 
         # ---------------------------------------------------------
         # 6. DATA LOGGING

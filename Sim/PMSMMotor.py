@@ -21,7 +21,7 @@ class PMSMMotor:
         self.theta = 0.0      # Mechanical Position (rad)
         self.theta_e = 0.0    # Electrical Position (rad)
 
-    def physics_step(self, Va, Vb, Vc, Tload):
+    def physics_step(self, Va, Vb, Vc, Tload, Ia, Ib, Ic):
         # ---------------------------------------------------------
         # MOTOR PHYSICS MODEL (The "Plant")
         # ---------------------------------------------------------
@@ -43,6 +43,15 @@ class PMSMMotor:
         Vd_ref = (2.0/3.0) * (Va * cos_t + Vb * cos_t_m + Vc * cos_t_p)
         Vq_ref = (2.0/3.0) * (-Va * sin_t - Vb * sin_t_m - Vc * sin_t_p)
 
+        # --- Calculate Id/Iq from Measured Currents (Ia, Ib, Ic) ---
+        # Clarke
+        I_alpha = Ia
+        I_beta = (Ia + 2.0*Ib) / math.sqrt(3.0)
+        
+        # Park
+        Id_meas = I_alpha * cos_t + I_beta * sin_t
+        Iq_meas = -I_alpha * sin_t + I_beta * cos_t
+
         # Constants that depend on speed (We)
         g11 = 1 - (self.Ts * (self.Rs / self.Ld))
         g12 = (We * self.Lq * self.Ts) / self.Ld
@@ -52,15 +61,12 @@ class PMSMMotor:
         h22 = self.Ts / self.Lq
         i2 = -We * self.Lambda_m * self.Ts / self.Lq
 
-        # Calculate next current states based on Applied Voltages
-        Id_next = g11 * self.Id + g12 * self.Iq + h11 * Vd_ref
-        Iq_next = g21 * self.Id + g22 * self.Iq + h22 * Vq_ref + i2
-        
-        self.Id = Id_next
-        self.Iq = Iq_next
+        # Calculate next current states based on Applied Voltages and MEASURED currents
+        Id_next = g11 * Id_meas + g12 * Iq_meas + h11 * Vd_ref
+        Iq_next = g21 * Id_meas + g22 * Iq_meas + h22 * Vq_ref + i2
         
         # Torque Calculation
-        Te = 1.5 * self.Npp * self.Iq * (self.Lambda_m + (self.Ld - self.Lq) * self.Id)
+        Te = 1.5 * self.Npp * Iq_next * (self.Lambda_m + (self.Ld - self.Lq) * Id_next)
         
         # Mechanical Dynamics (Euler Integration)
         # Handle Coulomb friction direction
@@ -72,6 +78,10 @@ class PMSMMotor:
         # Position Integration
         self.theta += self.Wr * self.Ts
         self.theta = self.theta % (2*math.pi) # Wrap mechanical angle
+
+        # Save for sensing 
+        self.Id = Id_next
+        self.Iq = Iq_next
 
         return Te
 

@@ -78,7 +78,7 @@ if __name__ == "__main__":
         # ---------------------------------------------------------
         # 5. MOTOR PHYSICS STEP
         # ---------------------------------------------------------
-        Te = motor.physics_step(Va, Vb, Vc, Tload)
+        Te = motor.physics_step(Va, Vb, Vc, Tload, Ia, Ib, Ic)
 
         # ---------------------------------------------------------
         # 6. DATA LOGGING
