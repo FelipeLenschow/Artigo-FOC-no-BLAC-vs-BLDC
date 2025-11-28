@@ -6,7 +6,7 @@ class FOCController:
         self.Imax = Imax
         
         # --- Controller Parameters ---
-        self.Kps = 1          # Speed P
+        self.Kps = 1.25       # Speed P
         self.Kis = 55.0       # Speed I
         self.KpId = 119.0     # Id P
         self.KiId = 4015.0    # Id I

@@ -61,13 +61,25 @@ class PMSMMotor:
         h22 = self.Ts / self.Lq
         i2 = -We * self.Lambda_m * self.Ts / self.Lq
 
+        # --- Calculate Back-EMF in DQ frame (PMSM Sinusoidal) ---
+        # For PMSM: ed = 0, eq = We * Lambda_m
+        ed = 0.0
+        eq = We * self.Lambda_m
+
         # Calculate next current states based on Applied Voltages and MEASURED currents
         Id_next = g11 * Id_meas + g12 * Iq_meas + h11 * Vd_ref
         Iq_next = g21 * Id_meas + g22 * Iq_meas + h22 * Vq_ref + i2
         
         # Torque Calculation
+        # # Te = 1.5 * P * (ed * Id + eq * Iq) / We
+        # if abs(We) > 1e-3:
+        #     Te = 1.5 * self.Npp * (ed * Id_next + eq * Iq_next) / We
+        # else:
+        #     # Fallback for low speed (avoid division by zero)
+        #     # For PMSM this simplifies to 1.5 * P * Lambda_m * Iq
+        #     Te = 1.5 * self.Npp * self.Lambda_m * Iq_next
         Te = 1.5 * self.Npp * Iq_next * (self.Lambda_m + (self.Ld - self.Lq) * Id_next)
-        
+
         # Mechanical Dynamics (Euler Integration)
         # Handle Coulomb friction direction
         Tc_dir = self.Tc if self.Wr > 0 else (-self.Tc if self.Wr < 0 else 0)

@@ -33,7 +33,7 @@
 
 \begin{document}
 
-\title{Simulação e Controle de um Motor Síncrono de Ímãs Permanentes usando Controle Orientado a Campo\\
+\title{Simulação do controle FOC de motor PMSM aplicado a um motor BLDC\\
 }
 
 \author{\IEEEauthorblockN{1\textsuperscript{st} Felipe Lenschow}
@@ -75,37 +75,108 @@ onde $\psi$ representa o fluxo total concatenado em cada enrolamento, dado por:
 
 \begin{equation}
     \begin{bmatrix} \psi_a \\ \psi_b \\ \psi_c \end{bmatrix} = 
-    \mathbf{L}_{abc} \begin{bmatrix} i_a \\ i_b \\ i_c \end{bmatrix} + 
+    \begin{bmatrix}
+    L_{aa} & L_{ab} & L_{ac} \\
+    L_{ba} & L_{bb} & L_{bc} \\
+    L_{ca} & L_{cb} & L_{cc}
+    \end{bmatrix}
+    \begin{bmatrix} i_a \\ i_b \\ i_c \end{bmatrix} + 
     \begin{bmatrix} \psi_{am} \\ \psi_{bm} \\ \psi_{cm} \end{bmatrix}
 \end{equation}
 
-Assumindo um estator simétrico e equilibrado onde a indutância própria é $L_s$ e a mútua é $M_s$, e negligenciando a variação da indutância com a posição do rotor ($L_m = 0$), a matriz de indutância $\mathbf{L}_{abc}$ é constante:
+A matriz de indutâncias $\mathbf{L}_{abc}$ contém termos que variam com a posição do rotor $\theta_m$ devido à saliência dos polos. As indutâncias próprias e mútuas são dadas por:
+
+\begin{align}
+    L_{aa} &= L_{al} + L_{aa0} + L_{g2} \cos(2\theta_e) \\
+    L_{bb} &= L_{al} + L_{aa0} + L_{g2} \cos(2\theta_e + 2\pi/3) \\
+    L_{cc} &= L_{al} + L_{aa0} + L_{g2} \cos(2\theta_e - 2\pi/3) \\
+    L_{ab} &= -\frac{1}{2}L_{aa0} + L_{g2} \cos(2\theta_e - 2\pi/3) \\
+    L_{bc} &= -\frac{1}{2}L_{aa0} + L_{g2} \cos(2\theta_e) \\
+    L_{ca} &= -\frac{1}{2}L_{aa0} + L_{g2} \cos(2\theta_e + 2\pi/3)
+\end{align}
+
+onde $L_{al}$ é a indutância de dispersão, $L_{aa0}$ é a componente constante da indutância mútua e $L_{g2}$ representa a amplitude da variação de indutância devido à saliência.
+
+Para simplificar a análise, aplica-se a Transformada de Park para converter as variáveis do referencial trifásico ($abc$) para o referencial síncrono girante ($dq0$). A transformação é definida por $\mathbf{x}_{dq0} = \mathbf{T} \mathbf{x}_{abc}$, onde $\mathbf{T}$ é a matriz de transformação dada por:
 
 \begin{equation}
-    \mathbf{L}_{abc} = \begin{bmatrix} L_s & M_s & M_s \\ M_s & L_s & M_s \\ M_s & M_s & L_s \end{bmatrix}
+    \mathbf{T} = \frac{2}{3} \begin{bmatrix} 
+    \cos(\theta_e) & \cos(\theta_e - \frac{2\pi}{3}) & \cos(\theta_e + \frac{2\pi}{3}) \\
+    -\sin(\theta_e) & -\sin(\theta_e - \frac{2\pi}{3}) & -\sin(\theta_e + \frac{2\pi}{3}) \\
+    \frac{1}{2} & \frac{1}{2} & \frac{1}{2}
+    \end{bmatrix}
 \end{equation}
 
-Para simplificar a análise e o controle, aplica-se a Transformada de Park para converter as variáveis do referencial trifásico ($abc$) para o referencial síncrono girante ($dq0$). A transformação é definida por $\mathbf{x}_{dq0} = \mathbf{T} \mathbf{x}_{abc}$, onde $\mathbf{T}$ é a matriz de transformação.
-
-Substituindo $\mathbf{x}_{abc} = \mathbf{T}^{-1} \mathbf{x}_{dq0}$ na equação de tensão \eqref{eq:vabc}:
+Aplicando a Transformada de Park na equação \eqref{eq:vabc}, obtemos a equação de tensão no referencial $dq0$:
 
 \begin{equation}
-    \mathbf{T}^{-1} \mathbf{v}_{dq0} = \mathbf{R} \mathbf{T}^{-1} \mathbf{i}_{dq0} + \mathbf{L}_{abc} \frac{d}{dt} (\mathbf{T}^{-1} \mathbf{i}_{dq0}) + \mathbf{e}_{abc}
+    \mathbf{v}_{dq0} = \mathbf{T} \mathbf{v}_{abc} = \mathbf{T} \mathbf{R} \mathbf{i}_{abc} + \mathbf{T} \frac{d\boldsymbol{\psi}_{abc}}{dt}
 \end{equation}
 
-Multiplicando ambos os lados por $\mathbf{T}$:
+Sabendo que $\mathbf{i}_{abc} = \mathbf{T}^{-1} \mathbf{i}_{dq0}$ e $\boldsymbol{\psi}_{abc} = \mathbf{T}^{-1} \boldsymbol{\psi}_{dq0}$, e assumindo $\mathbf{R}$ diagonal e constante:
 
 \begin{equation}
-    \mathbf{v}_{dq0} = \mathbf{R} \mathbf{i}_{dq0} + \mathbf{T} \mathbf{L}_{abc} \frac{d}{dt} (\mathbf{T}^{-1} \mathbf{i}_{dq0}) + \mathbf{T} \mathbf{e}_{abc}
+    \mathbf{v}_{dq0} = \mathbf{R} \mathbf{i}_{dq0} + \mathbf{T} \frac{d}{dt} (\mathbf{T}^{-1} \boldsymbol{\psi}_{dq0})
 \end{equation}
 
-Expandindo a derivada do produto $\frac{d}{dt} (\mathbf{T}^{-1} \mathbf{i}_{dq0}) = \mathbf{T}^{-1} \frac{d\mathbf{i}_{dq0}}{dt} + \frac{d\mathbf{T}^{-1}}{dt} \mathbf{i}_{dq0}$:
+Expandindo a derivada do produto $\frac{d}{dt} (\mathbf{T}^{-1} \boldsymbol{\psi}_{dq0}) = \mathbf{T}^{-1} \frac{d\boldsymbol{\psi}_{dq0}}{dt} + \frac{d\mathbf{T}^{-1}}{dt} \boldsymbol{\psi}_{dq0}$:
 
 \begin{equation}
-    \mathbf{v}_{dq0} = \mathbf{R} \mathbf{i}_{dq0} + \mathbf{T} \mathbf{L}_{abc} \mathbf{T}^{-1} \frac{d\mathbf{i}_{dq0}}{dt} + \mathbf{T} \mathbf{L}_{abc} \frac{d\mathbf{T}^{-1}}{dt} \mathbf{i}_{dq0} + \mathbf{e}_{dq0}
+    \mathbf{v}_{dq0} = \mathbf{R} \mathbf{i}_{dq0} + \frac{d\boldsymbol{\psi}_{dq0}}{dt} + \mathbf{T} \frac{d\mathbf{T}^{-1}}{dt} \boldsymbol{\psi}_{dq0}
+    \label{eq:vdq_flux}
 \end{equation}
 
-Substituindo $\mathbf{v}_{rot}$ na equação de estado e expandindo para os componentes escalares $d$ e $q$ (assumindo $L_{dq0}$ diagonal), obtemos a forma matricial explícita:
+O termo $\mathbf{T} \frac{d\mathbf{T}^{-1}}{dt}$ representa o acoplamento entre os eixos devido à velocidade angular elétrica $\omega_e$:
+
+\begin{equation}
+    \mathbf{T} \frac{d\mathbf{T}^{-1}}{dt} = \omega_e \begin{bmatrix} 0 & -1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 0 \end{bmatrix}
+\end{equation}
+
+Em seguida, aplica-se a transformação na equação de fluxo (2):
+
+\begin{equation}
+    \boldsymbol{\psi}_{dq0} = \mathbf{T} \boldsymbol{\psi}_{abc} = \mathbf{T} (\mathbf{L}_{abc} \mathbf{i}_{abc} + \boldsymbol{\psi}_{m,abc})
+\end{equation}
+
+\begin{equation}
+    \boldsymbol{\psi}_{dq0} = \mathbf{T} \mathbf{L}_{abc} \mathbf{T}^{-1} \mathbf{i}_{dq0} + \mathbf{T} \boldsymbol{\psi}_{m,abc}
+\end{equation}
+
+A matriz de indutância no referencial $dq0$, $\mathbf{L}_{dq0}$, é obtida pela transformação de similaridade $\mathbf{T} \mathbf{L}_{abc} \mathbf{T}^{-1}$. Esta operação desacopla as fases e elimina a dependência da posição do rotor, resultando em uma matriz diagonal constante:
+
+\begin{equation}
+    \mathbf{L}_{dq0} = \begin{bmatrix} L_d & 0 & 0 \\ 0 & L_q & 0 \\ 0 & 0 & L_{al} \end{bmatrix}
+\end{equation}
+
+onde as indutâncias de eixo direto e quadratura são constantes, e dadas por:
+
+\begin{equation}
+    L_d = L_{al} + \frac{3}{2}(L_{aa0} + L_{g2})
+\end{equation}
+\begin{equation}
+    L_q = L_{al} + \frac{3}{2}(L_{aa0} - L_{g2})
+\end{equation}
+
+Definindo o fluxo dos ímãs transformado como $\boldsymbol{\psi}_{m,dq0} = \mathbf{T} \boldsymbol{\psi}_{m,abc}$, a equação de fluxo no referencial $dq0$ é dada por:
+
+\begin{equation}
+    \boldsymbol{\psi}_{dq0} = \mathbf{L}_{dq0} \mathbf{i}_{dq0} + \boldsymbol{\psi}_{m,dq0}
+    \label{eq:flux_dq}
+\end{equation}
+
+Substituindo \eqref{eq:flux_dq} em \eqref{eq:vdq_flux}:
+
+\begin{equation}
+    \mathbf{v}_{dq0} = \mathbf{R} \mathbf{i}_{dq0} + \mathbf{L}_{dq0} \frac{d\mathbf{i}_{dq0}}{dt} + \mathbf{T} \frac{d\mathbf{T}^{-1}}{dt} \mathbf{L}_{dq0} \mathbf{i}_{dq0} + \mathbf{e}_{dq0}
+\end{equation}
+
+onde $\mathbf{e}_{dq0}$ é a força contra-eletromotriz no referencial $dq0$, dada por:
+
+\begin{equation}
+    \mathbf{e}_{dq0} = \frac{d\boldsymbol{\psi}_{m,dq0}}{dt} + \mathbf{T} \frac{d\mathbf{T}^{-1}}{dt} \boldsymbol{\psi}_{m,dq0}
+\end{equation}
+
+A forma matricial explícita no referencial $dq$ torna-se:
 
 \begin{equation}
     \frac{d\mathbf{i}_{dq0}}{dt} = \mathbf{A} \mathbf{i}_{dq0} + \mathbf{B} (\mathbf{v}_{dq0} - \mathbf{e}_{dq0})
@@ -128,23 +199,51 @@ Isolando as derivadas para cada componente:
     \frac{dI_q}{dt} = \frac{1}{L_q} (V_q - R_s I_q - \omega_e L_d I_d - e_q)
 \end{equation}
 
-Para o motor BLDC, a força contra-eletromotriz no referencial dq ($\mathbf{e}_{dq0}$) não é constante, mas sim dependente da posição do rotor devido à distribuição trapezoidal do fluxo. As componentes $e_d$ e $e_q$ são obtidas pela transformação direta das forças contra-eletromotrizes de fase $e_a, e_b, e_c$:
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\columnwidth]{back_emf_plot.png}}
+\caption{Formas de onda da força contra-eletromotriz trapezoidal no referencial trifásico ($e_a, e_b, e_c$) e suas componentes no referencial síncrono ($e_d, e_q$).}
+\label{fig:back_emf}
+\end{figure}
+
+A Fig. \ref{fig:back_emf} ilustra as formas de onda trapezoidais das fases e o resultado da transformação para o referencial dq. Nota-se que $e_q$ apresenta ondulações características (harmônicos de ordem $6k$) em vez de ser um valor DC puro como no PMSM senoidal, e $e_d$ também apresenta ondulações em torno de zero.
+
+\subsection{Modelo Matemático do PMSM}
+Diferente do BLDC, o Motor Síncrono de Ímãs Permanentes (PMSM) possui uma distribuição de fluxo senoidal. Neste caso, no referencial síncrono $dq$, as componentes da força contra-eletromotriz tornam-se constantes:
 
 \begin{equation}
-    e_d = \frac{2}{3} [e_a \cos(\theta_e) + e_b \cos(\theta_e - \frac{2\pi}{3}) + e_c \cos(\theta_e + \frac{2\pi}{3})]
+    e_d = 0
 \end{equation}
 
 \begin{equation}
-    e_q = \frac{2}{3} [-e_a \sin(\theta_e) - e_b \sin(\theta_e - \frac{2\pi}{3}) - e_c \sin(\theta_e + \frac{2\pi}{3})]
+    e_q = \omega_e \lambda_m
 \end{equation}
 
-onde $e_a, e_b, e_c$ são funções trapezoidais da posição do rotor. O termo $e_q$ apresenta ondulações características (harmônicos de ordem $6k$) em vez de ser um valor DC puro como no PMSM senoidal.
-
-O torque eletromagnético é dado por:
+Substituindo estas definições nas equações (9) e (10), obtemos as equações de estado para o PMSM:
 
 \begin{equation}
-    T_e = \frac{3}{2} P (\lambda_m I_q + (L_d - L_q) I_d I_q)
+    \frac{dI_d}{dt} = \frac{1}{L_d} (V_d - R_s I_d + \omega_e L_q I_q)
 \end{equation}
+
+\begin{equation}
+    \frac{dI_q}{dt} = \frac{1}{L_q} (V_q - R_s I_q - \omega_e L_d I_d - \omega_e \lambda_m)
+\end{equation}
+
+\subsection{Equação de Torque}
+A produção de torque eletromagnético em máquinas síncronas pode ser descrita de forma geral pelo balanço de potência no referencial $dq$. O torque é dado por:
+
+\begin{equation}
+    T_e = \frac{3}{2} P \frac{e_d I_d + e_q I_q}{\omega_e} + T_{relutancia}
+\end{equation}
+
+Para máquinas de ímãs permanentes montados na superfície (SPMSM), $L_d = L_q$, o que elimina o termo de torque de relutância.
+
+No caso do PMSM com fluxo senoidal, onde $e_d = 0$ e $e_q = \omega_e \lambda_m$, a equação simplifica-se para a forma clássica:
+
+\begin{equation}
+    T_e = \frac{3}{2} P \lambda_m I_q
+\end{equation}
+
+Para o motor BLDC, como visto anteriormente, $e_d$ e $e_q$ variam com a posição do rotor, resultando em ondulações de torque se as correntes $I_d$ e $I_q$ forem mantidas constantes. A simulação utiliza a forma geral baseada nas componentes de força contra-eletromotriz para capturar este comportamento.
 
 A dinâmica mecânica é descrita por:
 
@@ -159,13 +258,33 @@ onde $J$ é o momento de inércia, $\omega_m$ é a velocidade mecânica, $T_L$ �
 O Inversor de Fonte de Tensão (VSI) trifásico é modelado idealmente, assumindo que as tensões de referência geradas pelo controlador são aplicadas com precisão aos terminais do motor, limitadas apenas pela tensão do barramento CC $V_{bus}$. Os limites da Modulação por Largura de Pulso Vetorial Espacial (SVPWM) são considerados saturando a magnitude do vetor de tensão para $V_{bus}/\sqrt{3}$.
 
 \section{Estratégia de Controle}
-A estratégia FOC é implementada com uma estrutura de controle em cascata.
+A estratégia de controle adotada neste trabalho baseia-se na técnica de Controle Orientado a Campo (FOC), conforme detalhado em \cite{b3}. A estrutura de controle utiliza malhas em cascata, empregando controladores do tipo Proporcional-Integral (PI) para a regulação das correntes de eixo direto e quadratura, bem como para a velocidade do rotor.
 
-\subsection{Malha de Controle de Corrente}
-Dois controladores PI internos regulam as correntes $I_d$ e $I_q$. A referência de $I_d$ é definida como zero ($I_d^* = 0$) para maximizar o torque por ampère para o modelo SPMSM. A referência de $I_q$ é fornecida pela malha externa de velocidade. Termos de desacoplamento são calculados para compensar os efeitos de acoplamento cruzado entre os eixos d e q mostrados em \eqref{eq:vd} e \eqref{eq:vq}.
+\subsection{Projeto dos Controladores de Corrente}
+O projeto dos controladores de corrente segue uma metodologia de alocação de polos baseada na resposta em frequência desejada. A função de transferência de malha fechada é aproximada para um sistema de segunda ordem, permitindo relacionar os ganhos do controlador ($k_{p}, k_{i}$) com a frequência natural ($\omega_n$) e o fator de amortecimento ($\xi$).
 
-\subsection{Malha de Controle de Velocidade}
-Um controlador PI externo regula a velocidade do motor. O erro entre a velocidade de referência $\omega_{ref}$ e a velocidade medida $\omega_m$ aciona o controlador PI para gerar a corrente de torque de referência $I_q^*$. A saída do controlador de velocidade é saturada para limitar a corrente máxima e proteger o motor e o inversor.
+A banda passante ($\omega_b$) da malha de corrente é projetada para ser aproximadamente 10 vezes maior que a da malha de velocidade, garantindo o desacoplamento dinâmico. Neste trabalho, adotou-se $\omega_b = 350$ Hz e $\xi = 4$. Os ganhos resultantes são calculados conforme as equações analíticas apresentadas em \cite{b3}:
+
+\begin{equation}
+    k_{p_{iq}} = \frac{\xi \omega_b 2 L_q}{\sqrt{2\xi^2 + 1 + \sqrt{(1+2\xi)^2+1}}}
+\end{equation}
+
+\begin{equation}
+    k_{i_{iq}} = \frac{L_q \omega_b^2}{2\xi^2 + 1 + \sqrt{(1+2\xi)^2+1}}
+\end{equation}
+
+Substituindo os parâmetros, obtém-se $k_{p} = 119$ e $k_{i} = 4015$. O acoplamento entre os eixos $d$ e $q$ é tratado como um distúrbio a ser compensado pela ação integral do controlador. A estrutura completa do controle FOC implementado é ilustrada na Fig. \ref{fig:foc_diagram}.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\columnwidth]{foc_diagram.png}}
+\caption{Diagrama de blocos do controle FOC \cite{b3}.}
+\label{fig:foc_diagram}
+\end{figure}
+
+\subsection{Projeto do Controlador de Velocidade}
+O controlador de velocidade é projetado assumindo que a dinâmica da malha de corrente é suficientemente rápida para ser desprezada. A banda passante escolhida foi $\omega_b = 35$ Hz com um fator de amortecimento $\xi = 1.0$. Os ganhos obtidos para o controlador de velocidade são $k_{p\omega} = 1.25$ e $k_{i\omega} = 55$.
+
+A saída do controlador de velocidade (referência de corrente $I_q^*$) é saturada em $I_{max} = 8$ A para proteger o motor e evitar a desmagnetização dos ímãs permanentes. A referência de corrente de eixo direto é mantida em zero ($I_d^* = 0$).
 
 \section{Resultados da Simulação}
 A simulação foi realizada utilizando Python. Os parâmetros do motor utilizados são: $P=21$, $R_s=4.485 \Omega$, $L_d=L_q=54.8$ mH, $\lambda_m=0.201$ Wb, $J=0.1444$ kg$\cdot$m$^2$, $B=0.0057$ Nms/rad.
@@ -196,24 +315,25 @@ Uma simulação completa de um acionamento PMSM usando FOC foi apresentada. A im
 \section{Código da Simulação}
 Os códigos fonte da simulação desenvolvida em Python são apresentados a seguir.
 
-\subsection{PMSMMotor.py}
-\lstinputlisting{../Sim/PMSMMotor.py}
+% \subsection{PMSMMotor.py}
+% \lstinputlisting{../Sim/PMSMMotor.py}
 
-\subsection{FOCController.py}
-\lstinputlisting{../Sim/FOCController.py}
+% \subsection{FOCController.py}
+% \lstinputlisting{../Sim/FOCController.py}
 
-\subsection{Inverter.py}
-\lstinputlisting{../Sim/Inverter.py}
+% \subsection{Inverter.py}
+% \lstinputlisting{../Sim/Inverter.py}
 
-\subsection{Sensors.py}
-\lstinputlisting{../Sim/Sensors.py}
+% \subsection{Sensors.py}
+% \lstinputlisting{../Sim/Sensors.py}
 
-\subsection{Simulate.py}
-\lstinputlisting{../Sim/Simulate.py}
+% \subsection{Simulate.py}
+% \lstinputlisting{../Sim/Simulate.py}
 
 \begin{thebibliography}{00}
 \bibitem{b1} F. Blaschke, "The principle of field orientation as applied to the new TRANSVECTOR closed-loop control system for rotating-field machines," Siemens Review, vol. 39, no. 5, pp. 217-220, 1972.
 \bibitem{b2} MathWorks, "BLDC - Three-winding brushless direct current motor with trapezoidal flux distribution," [Online]. Available: https://www.mathworks.com/help/sps/ref/bldc.html.
+\bibitem{b3} Matheus Alexandre Bevilaqua, "Implementação do Controle de Velocidade de Motores Síncronos a Ímãs Permanentes em Plataforma LabVIEW FPGA", Universidade do Estado de Santa Catarina, 2015.
 \end{thebibliography}
 
 \end{document}
