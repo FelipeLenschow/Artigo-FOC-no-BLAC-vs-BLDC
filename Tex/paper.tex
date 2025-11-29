@@ -37,7 +37,7 @@
 }
 
 \author{\IEEEauthorblockN{1\textsuperscript{st} Felipe Lenschow}
-\IEEEauthorblockA{\textit{Programa de pós graduação em engenharia elétrica} \\
+\IEEEauthorblockA{\textit{Programa de Pós-Graduação em Engenharia Elétrica} \\
 \textit{Universidade do Estado de Santa Catarina}\\
 Joinville, Santa Catarina, Brasil \\
 felipe.lenschow@edu.udesc.br}
@@ -46,7 +46,7 @@ felipe.lenschow@edu.udesc.br}
 \maketitle
 
 \begin{abstract}
-Este artigo apresenta a modelagem e simulação de um sistema de acionamento de Motor Síncrono de Ímãs Permanentes (PMSM) utilizando Controle Orientado a Campo (FOC). O modelo matemático do PMSM no referencial dq é derivado, e uma estratégia de controle empregando controladores Proporcional-Integral (PI) para regulação de velocidade e corrente é implementada. A simulação é desenvolvida em Python, permitindo uma análise modular e flexível do comportamento dinâmico do motor sob condições variadas de carga e velocidade. Os resultados demonstram a eficácia da estratégia FOC em manter um controle preciso de velocidade e geração eficiente de torque.
+Este artigo apresenta a modelagem e simulação de um sistema de acionamento utilizando Controle Orientado a Campo (FOC), comparando seu desempenho quando aplicado a um Motor Síncrono de Ímãs Permanentes (PMSM) e a um Motor de Corrente Contínua Sem Escovas (BLDC). O modelo matemático no referencial dq é derivado para ambas as máquinas, e uma estratégia de controle empregando controladores Proporcional-Integral (PI) é implementada. A simulação, desenvolvida em Python, demonstra que, embora o FOC mantenha um controle preciso de velocidade para ambos os motores, ele introduz um ripple de torque significativo no motor BLDC devido à sua força contra-eletromotriz trapezoidal. Os resultados evidenciam as limitações do FOC padrão para máquinas BLDC em aplicações que exigem baixo ripple de torque.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -60,8 +60,8 @@ Este artigo detalha o desenvolvimento de um ambiente de simulação para um sist
 
 \section{Modelo do Sistema}
 
-\subsection{Modelo Matemático do BLDC}
-O modelo dinâmico do motor BLDC pode ser derivado a partir das equações de tensão de fase. Conforme descrito em \cite{b2}, as tensões nos enrolamentos do estator são definidas por:
+\subsection{Modelo de Motores PMSC}
+O modelo dinâmico de máquinas síncronas de ímãs permanentes pode ser derivado a partir das equações de tensão de fase. Conforme descrito em \cite{b2}, as tensões nos enrolamentos do estator são definidas por:
 
 \begin{equation}
     \begin{bmatrix} v_a \\ v_b \\ v_c \end{bmatrix} = 
@@ -199,16 +199,11 @@ Isolando as derivadas para cada componente:
     \frac{dI_q}{dt} = \frac{1}{L_q} (V_q - R_s I_q - \omega_e L_d I_d - e_q)
 \end{equation}
 
-\begin{figure}[htbp]
-\centerline{\includegraphics[width=\columnwidth]{back_emf_plot.png}}
-\caption{Formas de onda da força contra-eletromotriz trapezoidal no referencial trifásico ($e_a, e_b, e_c$) e suas componentes no referencial síncrono ($e_d, e_q$).}
-\label{fig:back_emf}
-\end{figure}
+\subsection{Diferenças entre BLDC e BLAC}
+Ambos são motores síncronos de ímãs permanentes, mas a principal distinção entre o motor BLDC e o BLAC reside na distribuição do fluxo magnético e na forma de onda da força contra-eletromotriz (Back-EMF).
 
-A Fig. \ref{fig:back_emf} ilustra as formas de onda trapezoidais das fases e o resultado da transformação para o referencial dq. Nota-se que $e_q$ apresenta ondulações características (harmônicos de ordem $6k$) em vez de ser um valor DC puro como no PMSM senoidal, e $e_d$ também apresenta ondulações em torno de zero.
-
-\subsection{Modelo Matemático do PMSM}
-Diferente do BLDC, o Motor Síncrono de Ímãs Permanentes (PMSM) possui uma distribuição de fluxo senoidal. Neste caso, no referencial síncrono $dq$, as componentes da força contra-eletromotriz tornam-se constantes:
+\subsubsection{BLAC}
+O Motor Síncrono de Ímãs Permanentes (PMSM), ou BLAC, possui uma distribuição de fluxo senoidal. No referencial síncrono $dq$, as componentes da força contra-eletromotriz tornam-se constantes:
 
 \begin{equation}
     e_d = 0
@@ -218,22 +213,33 @@ Diferente do BLDC, o Motor Síncrono de Ímãs Permanentes (PMSM) possui uma dis
     e_q = \omega_e \lambda_m
 \end{equation}
 
-Substituindo estas definições nas equações (9) e (10), obtemos as equações de estado para o PMSM:
+Isso simplifica o controle, pois as referências de corrente podem ser constantes para torque constante.
 
-\begin{equation}
-    \frac{dI_d}{dt} = \frac{1}{L_d} (V_d - R_s I_d + \omega_e L_q I_q)
-\end{equation}
+\subsubsection{BLDC}
+O motor BLDC possui uma distribuição de fluxo trapezoidal. Ao contrário do PMSM, as componentes $e_d$ e $e_q$ no referencial síncrono não são constantes, mas variam com a posição do rotor, apresentando ondulações características.
 
-\begin{equation}
-    \frac{dI_q}{dt} = \frac{1}{L_q} (V_q - R_s I_q - \omega_e L_d I_d - \omega_e \lambda_m)
-\end{equation}
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\columnwidth]{Figs/back_emf_plot.png}}
+\caption{Formas de onda da força contra-eletromotriz trapezoidal no referencial trifásico ($e_a, e_b, e_c$) e suas componentes no referencial síncrono ($e_d, e_q$).}
+\label{fig:back_emf}
+\end{figure}
+
+A Fig. \ref{fig:back_emf} ilustra que $e_q$ apresenta ondulações (harmônicos de ordem $6k$) em vez de ser um valor DC puro, e $e_d$ também oscila em torno de zero. Essas variações introduzem ripple de torque se o controle FOC padrão (projetado para PMSM) for aplicado sem compensação.
 
 \subsection{Equação de Torque}
-A produção de torque eletromagnético em máquinas síncronas pode ser descrita de forma geral pelo balanço de potência no referencial $dq$. O torque é dado por:
+A produção de torque eletromagnético em máquinas síncronas pode ser fundamentada no princípio do balanço de potência. A potência eletromecânica $P_{em}$ transferida do estator para o rotor é dada, no referencial $dq$, pela interação entre as correntes e as tensões induzidas (força contra-eletromotriz):
 
 \begin{equation}
-    T_e = \frac{3}{2} P \frac{e_d I_d + e_q I_q}{\omega_e} + T_{relutancia}
+    P_{em} = \frac{3}{2} (e_d I_d + e_q I_q)
 \end{equation}
+
+O torque eletromagnético $T_e$ relaciona-se com a potência mecânica pela velocidade angular do rotor $\omega_m$. Considerando $\omega_e = P \omega_m$, onde $P$ é o número de pares de polos:
+
+\begin{equation}
+    T_e = \frac{P_{em}}{\omega_m} = \frac{3}{2} P \frac{e_d I_d + e_q I_q}{\omega_e} + T_{relutancia}
+\end{equation}
+
+O termo $T_{relutancia}$ surge em máquinas com saliência ($L_d \neq L_q$), sendo proporcional a $(L_d - L_q) I_d I_q$.
 
 Para máquinas de ímãs permanentes montados na superfície (SPMSM), $L_d = L_q$, o que elimina o termo de torque de relutância.
 
@@ -255,34 +261,45 @@ A dinâmica mecânica é descrita por:
 onde $J$ é o momento de inércia, $\omega_m$ é a velocidade mecânica, $T_L$ é o torque de carga, $B$ é o coeficiente de atrito viscoso, e $T_c$ é o torque de atrito de Coulomb.
 
 \subsection{Modelo do Inversor}
-O Inversor de Fonte de Tensão (VSI) trifásico é modelado idealmente, assumindo que as tensões de referência geradas pelo controlador são aplicadas com precisão aos terminais do motor, limitadas apenas pela tensão do barramento CC $V_{bus}$. Os limites da Modulação por Largura de Pulso Vetorial Espacial (SVPWM) são considerados saturando a magnitude do vetor de tensão para $V_{bus}/\sqrt{3}$.
+O Inversor de Fonte de Tensão (VSI) trifásico é modelado idealmente, assumindo que as tensões de referência geradas pelo controlador são aplicadas com precisão aos terminais do motor, limitadas apenas pela tensão do barramento CC $V_{bus}$. Os limites da Modulação por Largura de Pulso Vetorial Espacial (SVPWM) são considerados saturando a magnitude do vetor de tensão para $V_{bus}/\sqrt{3}$ para um movimento suave.
 
-\section{Estratégia de Controle}
-A estratégia de controle adotada neste trabalho baseia-se na técnica de Controle Orientado a Campo (FOC), conforme detalhado em \cite{b3}. A estrutura de controle utiliza malhas em cascata, empregando controladores do tipo Proporcional-Integral (PI) para a regulação das correntes de eixo direto e quadratura, bem como para a velocidade do rotor.
-
-\subsection{Projeto dos Controladores de Corrente}
-O projeto dos controladores de corrente segue uma metodologia de alocação de polos baseada na resposta em frequência desejada. A função de transferência de malha fechada é aproximada para um sistema de segunda ordem, permitindo relacionar os ganhos do controlador ($k_{p}, k_{i}$) com a frequência natural ($\omega_n$) e o fator de amortecimento ($\xi$).
-
-A banda passante ($\omega_b$) da malha de corrente é projetada para ser aproximadamente 10 vezes maior que a da malha de velocidade, garantindo o desacoplamento dinâmico. Neste trabalho, adotou-se $\omega_b = 350$ Hz e $\xi = 4$. Os ganhos resultantes são calculados conforme as equações analíticas apresentadas em \cite{b3}:
+A banda passante ($\omega_b$) da malha de corrente é projetada para ser aproximadamente 10 vezes maior que a da malha de velocidade, garantindo o desacoplamento dinâmico. Neste trabalho, adotou-se $\omega_b = 350$ Hz e $\xi = 4$. Os ganhos resultantes são calculados conforme as equações analíticas apresentadas em \cite{b3}, tendo como premissas que o acoplamento entre os eixos $d$ e $q$ é tratado como um distúrbio a ser compensado, que a dinâmica dos eixos $d$ e $q$ são iguais (válido para $L_d$ = $L_q$), e que a resistencia do motor seja muito menor que o ganho do controlador:
 
 \begin{equation}
-    k_{p_{iq}} = \frac{\xi \omega_b 2 L_q}{\sqrt{2\xi^2 + 1 + \sqrt{(1+2\xi)^2+1}}}
+    k_{p} = \frac{\xi \omega_b 2 L_q}{\sqrt{2\xi^2 + 1 + \sqrt{(1+2\xi)^2+1}}}
 \end{equation}
 
 \begin{equation}
-    k_{i_{iq}} = \frac{L_q \omega_b^2}{2\xi^2 + 1 + \sqrt{(1+2\xi)^2+1}}
+    k_{i} = \frac{L_q \omega_b^2}{2\xi^2 + 1 + \sqrt{(1+2\xi)^2+1}}
 \end{equation}
 
-Substituindo os parâmetros, obtém-se $k_{p} = 119$ e $k_{i} = 4015$. O acoplamento entre os eixos $d$ e $q$ é tratado como um distúrbio a ser compensado pela ação integral do controlador. A estrutura completa do controle FOC implementado é ilustrada na Fig. \ref{fig:foc_diagram}.
+Substituindo os parâmetros, obtém-se $k_{p} = 119$ e $k_{i} = 4015$. O diagrama de blocos do controlador de corrente é mostrado na Fig. \ref{fig:current_controler}.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=\columnwidth]{foc_diagram.png}}
-\caption{Diagrama de blocos do controle FOC \cite{b3}.}
-\label{fig:foc_diagram}
+\centerline{\includegraphics[width=\columnwidth]{Figs/current_controler.png}}
+\caption{Diagrama de blocos do controlador de corrente \cite{b3}.}
+\label{fig:current_controler}
 \end{figure}
 
+
 \subsection{Projeto do Controlador de Velocidade}
-O controlador de velocidade é projetado assumindo que a dinâmica da malha de corrente é suficientemente rápida para ser desprezada. A banda passante escolhida foi $\omega_b = 35$ Hz com um fator de amortecimento $\xi = 1.0$. Os ganhos obtidos para o controlador de velocidade são $k_{p\omega} = 1.25$ e $k_{i\omega} = 55$.
+O controlador de velocidade é projetado assumindo que a dinâmica da malha de corrente é suficientemente rápida para ser desprezada. A banda passante escolhida foi $\omega_b = 35$ Hz com um fator de amortecimento $\xi = 1.0$. As equações para os ganhos do controlador de velocidade, considerando que a dinâmica da malha de corrente é suficientemente rápida para ser desprezada, que o torque de carga e coulomb distúrbios a serem compensados e o atrito viscoso é muito menor que o momento de inércia, e são dadas por:
+
+\begin{equation}
+    k_{p} = \frac{\xi \omega_b 2 J}{K_t \sqrt{2\xi^2 + 1 + \sqrt{(1+2\xi)^2+1}}}
+\end{equation}
+
+\begin{equation}
+    k_{i} = \frac{J \omega_b^2}{K_t (2\xi^2 + 1 + \sqrt{(1+2\xi)^2+1})}
+\end{equation}
+
+Os ganhos obtidos para o controlador de velocidade são $k_{p} = 1.25$ e $k_{i} = 55$. O diagrama de blocos correspondente é apresentado na Fig. \ref{fig:speed_controler}.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\columnwidth]{Figs/speed_controler.png}}
+\caption{Diagrama de blocos do controlador de velocidade \cite{b3}.}
+\label{fig:speed_controler}
+\end{figure}
 
 A saída do controlador de velocidade (referência de corrente $I_q^*$) é saturada em $I_{max} = 8$ A para proteger o motor e evitar a desmagnetização dos ímãs permanentes. A referência de corrente de eixo direto é mantida em zero ($I_d^* = 0$).
 
@@ -298,18 +315,28 @@ O perfil de simulação consiste em:
     \item $t=0.8s$: Torque de carga removido.
 \end{itemize}
 
-A Fig. \ref{fig:results} mostra a resposta do sistema.
+A Fig. \ref{fig:results_speed_torque} e a Fig. \ref{fig:results_currents} mostram a resposta do sistema comparando o motor PMSM (BLAC) e o motor BLDC sob o mesmo controle FOC.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=\columnwidth]{sim_results.png}}
-\caption{Resultados da simulação mostrando Velocidade, Torque e Correntes ($I_d, I_q$).}
-\label{fig:results}
+\centerline{\includegraphics[width=\columnwidth]{Figs/comparison_speed_torque.png}}
+\caption{Comparação de Velocidade e Torque entre PMSM e BLDC.}
+\label{fig:results_speed_torque}
 \end{figure}
 
-O controlador de velocidade rastreia a referência de RPM com precisão e mínimo sobressinal. Quando o torque de carga é aplicado em $t=0.2s$, observa-se uma pequena queda de velocidade, que é rapidamente rejeitada pelo controlador à medida que $I_q$ aumenta para gerar o torque eletromagnético necessário. A corrente $I_d$ é mantida em zero, garantindo uma operação eficiente.
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\columnwidth]{Figs/comparison_currents.png}}
+\caption{Comparação das Correntes $I_d$ e $I_q$ entre PMSM e BLDC.}
+\label{fig:results_currents}
+\end{figure}
+
+O controlador de velocidade rastreia a referência de RPM com precisão para ambos os motores. No entanto, observa-se que o motor BLDC apresenta um ripple de torque significativo em comparação com o PMSM. Este ripple é intrínseco à aplicação do controle FOC (projetado para formas de onda senoidais) em uma máquina com força contra-eletromotriz trapezoidal. A frequência fundamental deste ripple é de 6 vezes a frequência elétrica, correspondendo às comutações que ocorreriam em um controle trapezoidal padrão.
+
+As correntes $I_d$ e $I_q$ no caso do BLDC (Fig. \ref{fig:results_currents}) mostram oscilações claras. O controlador PI de corrente tenta compensar a variação da Back-EMF trapezoidal, que não é constante no referencial $dq$, resultando nessas ondulações. Embora a velocidade média seja mantida, a qualidade do torque é degradada, o que pode gerar vibrações e ruído acústico em aplicações reais.
 
 \section{Conclusão}
-Uma simulação completa de um acionamento PMSM usando FOC foi apresentada. A implementação modular em Python permite testes fáceis de diferentes parâmetros de controle e características do motor. Os resultados confirmam a robustez do esquema FOC em lidar com distúrbios de carga e rastrear referências de velocidade.
+Uma simulação completa de um acionamento PMSM usando FOC foi apresentada e comparada com a aplicação da mesma estratégia em um motor BLDC. A implementação modular em Python permitiu uma análise detalhada das diferenças de desempenho.
+
+Os resultados confirmam que, embora o FOC possa controlar a velocidade de um motor BLDC com eficácia, ele introduz um ripple de torque considerável devido ao descasamento entre a estratégia de controle (baseada em modelos senoidais) e a física do motor (Back-EMF trapezoidal). Para aplicações de alto desempenho utilizando motores BLDC, estratégias de minimização de ripple de torque ou o uso de controle trapezoidal dedicado seriam mais apropriados. O ambiente de simulação desenvolvido serve como uma ferramenta valiosa para estudar e validar tais estratégias de controle avançado.
 
 \appendices
 \section{Código da Simulação}
@@ -317,6 +344,9 @@ Os códigos fonte da simulação desenvolvida em Python são apresentados a segu
 
 % \subsection{PMSMMotor.py}
 % \lstinputlisting{../Sim/PMSMMotor.py}
+
+% \subsection{BLDCMotor.py}
+% \lstinputlisting{../Sim/BLDCMotor.py}
 
 % \subsection{FOCController.py}
 % \lstinputlisting{../Sim/FOCController.py}
@@ -329,6 +359,12 @@ Os códigos fonte da simulação desenvolvida em Python são apresentados a segu
 
 % \subsection{Simulate.py}
 % \lstinputlisting{../Sim/Simulate.py}
+
+% \subsection{compare\_motors.py}
+% \lstinputlisting{../Sim/compare_motors.py}
+
+% \subsection{PlotBackEMF.py}
+% \lstinputlisting{../Sim/PlotBackEMF.py}
 
 \begin{thebibliography}{00}
 \bibitem{b1} F. Blaschke, "The principle of field orientation as applied to the new TRANSVECTOR closed-loop control system for rotating-field machines," Siemens Review, vol. 39, no. 5, pp. 217-220, 1972.

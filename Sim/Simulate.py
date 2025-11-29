@@ -7,23 +7,18 @@ from FOCController import FOCController
 from Inverter import Inverter
 from Sensors import Sensors
 
-# --- Main Execution ---
 if __name__ == "__main__":
-    # Simulation Parameters
     Ts = 1e-4
     t_end = 1.0
     
-    # Initialize Modules
     # motor = PMSMMotor(Ts)
     motor = BLDCMotor(Ts)
     controller = FOCController(Ts)
     inverter = Inverter()
     sensors = Sensors()
     
-    # Time settings
     num_steps = int(t_end / Ts)
 
-    # Storage for plotting
     history = {
         'time': np.zeros(num_steps),
         'rpm_ref': np.zeros(num_steps),
@@ -39,7 +34,6 @@ if __name__ == "__main__":
 
     t = 0.0
     for k in range(num_steps):
-        # Update time
         t = k * Ts
         history['time'][k] = t
 
@@ -61,12 +55,12 @@ if __name__ == "__main__":
         V_bus = 311.0 
 
         # ---------------------------------------------------------
-        # 2. SENSORS STEP
+        # 2. SENSORING STEP
         # ---------------------------------------------------------
         Ia, Ib, Ic, theta_e, Wr_meas = sensors.measure(motor, RPMref)
 
         # ---------------------------------------------------------
-        # 3. CONTROL STEP
+        # 3. CONTROLLER STEP
         # ---------------------------------------------------------
         Va_ref, Vb_ref, Vc_ref = controller.control_step(
             RPMref, Wr_meas, Ia, Ib, Ic, theta_e, V_bus
@@ -95,10 +89,8 @@ if __name__ == "__main__":
         
     data = history
 
-    # --- Plotting ---
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
 
-    # Plot 1: Speed
     ax1.plot(data['time'], data['rpm_ref'], 'r--', label='RPM Ref')
     ax1.plot(data['time'], data['rpm_act'], 'b-', label='RPM Actual')
     ax1.set_ylabel('Speed (RPM)')
@@ -106,14 +98,12 @@ if __name__ == "__main__":
     ax1.legend()
     ax1.grid(True)
 
-    # Plot 2: Torque
     ax2.plot(data['time'], data['Te'], 'g-', label='Electromagnetic Torque')
     ax2.plot(data['time'], data['Tload'], 'k--', label='Load Torque')
     ax2.set_ylabel('Torque (Nm)')
     ax2.legend()
     ax2.grid(True)
     
-    # Plot 3: Currents and Voltage Input
     ax3.plot(data['time'], data['Iq'], 'c-', label='Iq (A)')
     ax3.plot(data['time'], data['Id'], 'm-', label='Id (A)')
     ax3.set_ylabel('Current (A)')
