@@ -31,14 +31,8 @@ class FOCController:
         Up_s = self.Kps * error_speed
         Ui_s_next = self.Ui_s + (self.Kis * self.Ts * error_speed)
         
-        Iq_ref_unlimited = Up_s + Ui_s_next
-        
-        Iq_ref = max(-self.Imax, min(self.Imax, Iq_ref_unlimited))
-        
-        if Iq_ref == Iq_ref_unlimited:
-            self.Ui_s = Ui_s_next
-        else:
-            pass 
+        Iq_ref = Up_s + Ui_s_next
+        self.Ui_s = Ui_s_next 
         
         Id_ref = 0.0
 
