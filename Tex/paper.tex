@@ -173,9 +173,30 @@ Substituindo na equação \eqref{eq:vdq_flux}:
     \mathbf{R} \mathbf{i}_{dq0} + 
     \frac{d\boldsymbol{\psi}_{dq0}}{dt} + 
     \mathbf{T} \frac{d\mathbf{T}^{-1}}{dt} \boldsymbol{\psi}_{dq0}
+    \label{eq:vdq_flux_opened}
 \end{equation}
 
-O termo $\mathbf{T} \frac{d\mathbf{T}^{-1}}{dt}$ representa o acoplamento cruzado
+A matriz inversa da transformada de Park é definida como:
+
+\begin{equation}
+    \mathbf{T}^{-1} = \begin{bmatrix} 
+    \cos(\theta_e) & -\sin(\theta_e) & 1 \\
+    \cos(\theta_e - \frac{2\pi}{3}) & -\sin(\theta_e - \frac{2\pi}{3}) & 1 \\
+    \cos(\theta_e + \frac{2\pi}{3}) & -\sin(\theta_e + \frac{2\pi}{3}) & 1
+    \end{bmatrix}
+\end{equation}
+
+Sua derivada em relação ao tempo é:
+
+\begin{equation}
+    \frac{d\mathbf{T}^{-1}}{dt} = \omega_e \begin{bmatrix} 
+    -\sin(\theta_e) & -\cos(\theta_e) & 0 \\
+    -\sin(\theta_e - \frac{2\pi}{3}) & -\cos(\theta_e - \frac{2\pi}{3}) & 0 \\
+    -\sin(\theta_e + \frac{2\pi}{3}) & -\cos(\theta_e + \frac{2\pi}{3}) & 0
+    \end{bmatrix}
+\end{equation}
+
+Portanto, o termo $\mathbf{T} \frac{d\mathbf{T}^{-1}}{dt}$ resulta em um acoplamento cruzado
 entre os eixos $d$ e $q$ devido à velocidade angular elétrica $\omega_e$:
 
 \begin{equation}
@@ -217,29 +238,40 @@ onde as indutâncias de eixo direto e quadratura são constantes, e dadas por:
     L_q = L_{al} + \frac{3}{2}(L_{aa0} - L_{g2})
 \end{equation}
 
-Definindo o fluxo dos ímãs transformado como $\boldsymbol{\psi}_{m,dq0} = \mathbf{T} \boldsymbol{\psi}_{m,abc}$, a equação de fluxo no referencial $dq0$ é dada por:
+Definindo o fluxo dos ímãs transformado como 
+$\boldsymbol{\psi}_{m,dq0} = \mathbf{T} \boldsymbol{\psi}_{m,abc}$, 
+a equação de fluxo no referencial $dq0$ é dada por:
 
 \begin{equation}
     \boldsymbol{\psi}_{dq0} = \mathbf{L}_{dq0} \mathbf{i}_{dq0} + \boldsymbol{\psi}_{m,dq0}
     \label{eq:flux_dq}
 \end{equation}
 
-Substituindo \eqref{eq:flux_dq} em \eqref{eq:vdq_flux}:
+Substituindo \eqref{eq:flux_dq} em \eqref{eq:vdq_flux_opened}:
 
 \begin{equation}
-    \mathbf{v}_{dq0} = \mathbf{R} \mathbf{i}_{dq0} + \mathbf{L}_{dq0} \frac{d\mathbf{i}_{dq0}}{dt} + \mathbf{T} \frac{d\mathbf{T}^{-1}}{dt} \mathbf{L}_{dq0} \mathbf{i}_{dq0} + \mathbf{e}_{dq0}
+    \mathbf{v}_{dq0} = 
+    \mathbf{R} \mathbf{i}_{dq0} + 
+    \mathbf{L}_{dq0} \frac{d\mathbf{i}_{dq0}}{dt} + 
+    \mathbf{T} \frac{d\mathbf{T}^{-1}}{dt} \mathbf{L}_{dq0} \mathbf{i}_{dq0} + 
+    \mathbf{e}_{dq0}
 \end{equation}
 
 onde $\mathbf{e}_{dq0}$ é a força contra-eletromotriz no referencial $dq0$, dada por:
 
 \begin{equation}
-    \mathbf{e}_{dq0} = \frac{d\boldsymbol{\psi}_{m,dq0}}{dt} + \mathbf{T} \frac{d\mathbf{T}^{-1}}{dt} \boldsymbol{\psi}_{m,dq0}
+    \mathbf{e}_{dq0} = 
+    \frac{d\boldsymbol{\psi}_{m,dq0}}{dt} + 
+    \mathbf{T} \frac{d\mathbf{T}^{-1}}{dt} \boldsymbol{\psi}_{m,dq0}
 \end{equation}
 
 A forma matricial explícita no referencial $dq$ torna-se:
 
 \begin{equation}
-    \frac{d\mathbf{i}_{dq0}}{dt} = \mathbf{A} \mathbf{i}_{dq0} + \mathbf{B} (\mathbf{v}_{dq0} - \mathbf{e}_{dq0})
+    \frac{d\mathbf{i}_{dq0}}{dt} = 
+    \mathbf{A} \mathbf{i}_{dq0} + 
+    \mathbf{B} (\mathbf{v}_{dq0} - 
+    \mathbf{e}_{dq0})
 \end{equation}
 
 onde as matrizes de estado $\mathbf{A}$ e de entrada $\mathbf{B}$ são dadas por:
