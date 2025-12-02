@@ -291,8 +291,6 @@ Isolando as derivadas para cada componente:
     \frac{dI_q}{dt} = \frac{1}{L_q} (V_q - R_s I_q - \omega_e L_d I_d - e_q)
 \end{equation}
 
-
-
 \subsection{Diferenças entre BLDC e BLAC}
 Ambos são motores síncronos de ímãs permanentes, mas a principal distinção entre o motor BLDC e o 
 BLAC reside na distribuição do fluxo magnético e na forma de onda da força contra-eletromotriz (Back-EMF).
@@ -330,19 +328,62 @@ A Fig. \ref{fig:back_emf} ilustra que $e_q$ apresenta ondulações
 oscila em torno de zero. Essas variações introduzem ripple de torque 
 se o controle FOC padrão (projetado para PMSM) for aplicado sem compensação.
 
-
-
 \subsection{Equação de Torque}
-A produção de torque eletromagnético em máquinas síncronas pode ser fundamentada no princípio do balanço de potência. A potência eletromecânica $P_{em}$ transferida do estator para o rotor é dada, no referencial $dq$, pela interação entre as correntes e as tensões induzidas (força contra-eletromotriz):
+A potência instantânea de entrada nos terminais do estator no referencial $abc$ é dada por:
 
 \begin{equation}
-    P_{em} = \frac{3}{2} (e_d I_d + e_q I_q)
+    P_{abc} = v_a i_a + v_b i_b + v_c i_c
+\end{equation}
+
+Utilizando a transformação de Park, e considerando a transformação 
+invariante em amplitude e a componente zero nula, a potência pode ser reescrita no referencial $dq0$:
+
+\begin{equation}
+    P_{dq} = \frac{3}{2} (v_d i_d + v_q i_q)
+    \label{eq:potencia_dq}
+\end{equation}
+
+Substituindo as equações de tensão $v_d$ e $v_q$ na equação de potência (\ref{eq:vdq_flux_opened} em \ref{eq:potencia_dq}):
+
+\begin{equation}
+\begin{split}
+    P_{dq} = \frac{3}{2} \bigg[ i_d \left( R_s i_d + L_d \frac{di_d}{dt} - \omega_e L_q i_q + e_d \right) \\
+    + i_q \left( R_s i_q + L_q \frac{di_q}{dt} + \omega_e L_d i_d + e_q \right) \bigg]
+\end{split}
+\end{equation}
+
+Reagrupando os termos, podemos identificar três componentes distintas de potência:
+
+\begin{equation}
+\begin{split}
+    P_{dq} = \underbrace{\frac{3}{2} R_s (i_d^2 + i_q^2)}_{P_{cu}} 
+    + \underbrace{\frac{3}{2} \left( L_d i_d \frac{di_d}{dt} + L_q i_q \frac{di_q}{dt} \right)}_{P_{mag}} \\
+    + \underbrace{\frac{3}{2} \left[ (e_d i_d + e_q i_q) + \omega_e (L_d - L_q) i_d i_q \right]}_{P_{em}}
+\end{split}
+\end{equation}
+
+onde $P_{cu}$ representa as perdas resistivas no cobre, $P_{mag}$ é a taxa de variação da energia magnética armazenada, e $P_{em}$ é a potência eletromecânica convertida. Portanto, a potência eletromecânica é:
+
+\begin{equation}
+    P_{em} = \frac{3}{2} (e_d i_d + e_q i_q) + \frac{3}{2} \omega_e (L_d - L_q) i_d i_q
 \end{equation}
 
 O torque eletromagnético $T_e$ relaciona-se com a potência mecânica pela velocidade angular do rotor $\omega_m$. Considerando $\omega_e = P \omega_m$, onde $P$ é o número de pares de polos:
 
 \begin{equation}
-    T_e = \frac{P_{em}}{\omega_m} = \frac{3}{2} P \frac{e_d I_d + e_q I_q}{\omega_e} + T_{relutancia}
+    T_e = \frac{P_{em}}{\omega_m} = \frac{P P_{em}}{\omega_e}
+\end{equation}
+
+Substituindo a expressão de $P_{em}$ encontrada anteriormente:
+
+\begin{equation}
+    T_e = \frac{3}{2} P \left[ \frac{e_d i_d + e_q i_q}{\omega_e} + (L_d - L_q) i_d i_q \right]
+\end{equation}
+
+Podemos separar o torque em duas componentes: o torque de alinhamento (ou síncrono), devido à interação com a força contra-eletromotriz, e o torque de relutância, devido à assimetria do rotor:
+
+\begin{equation}
+    T_e = \underbrace{\frac{3}{2} P \frac{e_d i_d + e_q i_q}{\omega_e}}_{T_{sinc}} + \underbrace{\frac{3}{2} P (L_d - L_q) i_d i_q}_{T_{rel}}
 \end{equation}
 
 O termo $T_{relutancia}$ surge em máquinas com saliência ($L_d \neq L_q$), sendo proporcional a $(L_d - L_q) I_d I_q$.
@@ -445,6 +486,7 @@ Uma simulação completa de um acionamento PMSM usando FOC foi apresentada e com
 Os resultados confirmam que, embora o FOC possa controlar a velocidade de um motor BLDC com eficácia, ele introduz um ripple de torque considerável devido ao descasamento entre a estratégia de controle (baseada em modelos senoidais) e a física do motor (Back-EMF trapezoidal). Para aplicações de alto desempenho utilizando motores BLDC, estratégias de minimização de ripple de torque ou o uso de controle trapezoidal dedicado seriam mais apropriados. O ambiente de simulação desenvolvido serve como uma ferramenta valiosa para estudar e validar tais estratégias de controle avançado.
 
 \appendices
+
 \section{Código da Simulação}
 Os códigos fonte da simulação desenvolvida em Python são apresentados a seguir.
 
