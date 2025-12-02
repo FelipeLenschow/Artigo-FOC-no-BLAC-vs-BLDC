@@ -39,7 +39,11 @@ def generate_plot():
     theta_e = np.linspace(0, 4*np.pi, 1000)
     
     ea_bldc_list = []
+    eb_bldc_list = []
+    ec_bldc_list = []
     ea_blac_list = []
+    eb_blac_list = []
+    ec_blac_list = []
     
     ed_bldc_list = []
     eq_bldc_list = []
@@ -55,6 +59,8 @@ def generate_plot():
         val_c_bldc = -E_mag * trapezoidal_shape(t + 2*math.pi/3)
         
         ea_bldc_list.append(val_a_bldc)
+        eb_bldc_list.append(val_b_bldc)
+        ec_bldc_list.append(val_c_bldc)
         
         vd_bldc, vq_bldc = dq0_transform(val_a_bldc, val_b_bldc, val_c_bldc, t)
         ed_bldc_list.append(vd_bldc)
@@ -65,6 +71,8 @@ def generate_plot():
         val_c_blac = -E_mag * math.sin(t + 2*math.pi/3)
         
         ea_blac_list.append(val_a_blac)
+        eb_blac_list.append(val_b_blac)
+        ec_blac_list.append(val_c_blac)
         
         vd_blac, vq_blac = dq0_transform(val_a_blac, val_b_blac, val_c_blac, t)
         ed_blac_list.append(vd_blac)
@@ -72,12 +80,19 @@ def generate_plot():
 
     plt.figure(figsize=(10, 5))
     
-    plt.plot(theta_e, ea_bldc_list, label=r'$e_{a,BLDC}$', linestyle='-', linewidth=2, color='blue')
-    plt.plot(theta_e, ed_bldc_list, label=r'$e_{d,BLDC}$', linestyle='-', linewidth=2, color='red')
-    plt.plot(theta_e, eq_bldc_list, label=r'$e_{q,BLDC}$', linestyle='-', linewidth=2, color='green')
-    plt.plot(theta_e, ea_blac_list, label=r'$e_{a,BLAC}$', linestyle='--', linewidth=2, color='cyan')
-    plt.plot(theta_e, ed_blac_list, label=r'$e_{d,BLAC}$', linestyle='--', linewidth=2, color='orange')
-    plt.plot(theta_e, eq_blac_list, label=r'$e_{q,BLAC}$', linestyle='--', linewidth=2, color='lime')
+    # Plot phases B and C in light gray (background)
+    plt.plot(theta_e, eb_bldc_list, linestyle='-', linewidth=1, color='lightgray', zorder=1)
+    plt.plot(theta_e, ec_bldc_list, linestyle='-', linewidth=1, color='lightgray', zorder=1)
+    plt.plot(theta_e, eb_blac_list, linestyle='--', linewidth=1, color='lightgray', zorder=1)
+    plt.plot(theta_e, ec_blac_list, linestyle='--', linewidth=1, color='lightgray', zorder=1)
+    
+    # Plot main phases and dq components
+    plt.plot(theta_e, ea_bldc_list, label=r'$e_{a,BLDC}$', linestyle='-', linewidth=2, color='blue', zorder=2)
+    plt.plot(theta_e, ed_bldc_list, label=r'$e_{d,BLDC}$', linestyle='-', linewidth=2, color='red', zorder=2)
+    plt.plot(theta_e, eq_bldc_list, label=r'$e_{q,BLDC}$', linestyle='-', linewidth=2, color='green', zorder=2)
+    plt.plot(theta_e, ea_blac_list, label=r'$e_{a,BLAC}$', linestyle='--', linewidth=2, color='cyan', zorder=2)
+    plt.plot(theta_e, ed_blac_list, label=r'$e_{d,BLAC}$', linestyle='--', linewidth=2, color='orange', zorder=2)
+    plt.plot(theta_e, eq_blac_list, label=r'$e_{q,BLAC}$', linestyle='--', linewidth=2, color='lime', zorder=2)
     
     plt.xlabel('Ângulo elétrico (rad)')
     plt.ylabel('Amplitude (Normalizada)')

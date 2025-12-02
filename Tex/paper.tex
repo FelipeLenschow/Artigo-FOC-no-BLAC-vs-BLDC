@@ -291,11 +291,15 @@ Isolando as derivadas para cada componente:
     \frac{dI_q}{dt} = \frac{1}{L_q} (V_q - R_s I_q - \omega_e L_d I_d - e_q)
 \end{equation}
 
+
+
 \subsection{Diferenças entre BLDC e BLAC}
-Ambos são motores síncronos de ímãs permanentes, mas a principal distinção entre o motor BLDC e o BLAC reside na distribuição do fluxo magnético e na forma de onda da força contra-eletromotriz (Back-EMF).
+Ambos são motores síncronos de ímãs permanentes, mas a principal distinção entre o motor BLDC e o 
+BLAC reside na distribuição do fluxo magnético e na forma de onda da força contra-eletromotriz (Back-EMF).
 
 \subsubsection{BLAC}
-O Motor Síncrono de Ímãs Permanentes (PMSM), ou BLAC, possui uma distribuição de fluxo senoidal. No referencial síncrono $dq$, as componentes da força contra-eletromotriz tornam-se constantes:
+O Motor Síncrono de Ímãs Permanentes (PMSM), ou BLAC, possui uma distribuição de fluxo senoidal. 
+No referencial síncrono $dq$, as componentes da força contra-eletromotriz tornam-se constantes:
 
 \begin{equation}
     e_d = 0
@@ -307,16 +311,26 @@ O Motor Síncrono de Ímãs Permanentes (PMSM), ou BLAC, possui uma distribuiç�
 
 Isso simplifica o controle, pois as referências de corrente podem ser constantes para torque constante.
 
+
+
 \subsubsection{BLDC}
-O motor BLDC possui uma distribuição de fluxo trapezoidal. Ao contrário do PMSM, as componentes $e_d$ e $e_q$ no referencial síncrono não são constantes, mas variam com a posição do rotor, apresentando ondulações características.
+O motor BLDC possui uma distribuição de fluxo trapezoidal. Ao contrário do BLAC, as componentes 
+$e_d$ e $e_q$ no referencial síncrono não são constantes, mas variam com a posição do rotor, 
+apresentando ondulações características.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=\columnwidth]{Figs/back_emf_plot.png}}
-\caption{Formas de onda da força contra-eletromotriz trapezoidal no referencial trifásico ($e_a, e_b, e_c$) e suas componentes no referencial síncrono ($e_d, e_q$).}
+\caption{Formas de onda da força contra-eletromotriz trapezoidal no referencial 
+trifásico ($e_a, e_b, e_c$) e suas componentes no referencial síncrono ($e_d, e_q$).}
 \label{fig:back_emf}
 \end{figure}
 
-A Fig. \ref{fig:back_emf} ilustra que $e_q$ apresenta ondulações (harmônicos de ordem $6k$) em vez de ser um valor DC puro, e $e_d$ também oscila em torno de zero. Essas variações introduzem ripple de torque se o controle FOC padrão (projetado para PMSM) for aplicado sem compensação.
+A Fig. \ref{fig:back_emf} ilustra que $e_q$ apresenta ondulações 
+(harmônicos de ordem $6k$) em vez de ser um valor DC puro, e $e_d$ também 
+oscila em torno de zero. Essas variações introduzem ripple de torque 
+se o controle FOC padrão (projetado para PMSM) for aplicado sem compensação.
+
+
 
 \subsection{Equação de Torque}
 A produção de torque eletromagnético em máquinas síncronas pode ser fundamentada no princípio do balanço de potência. A potência eletromecânica $P_{em}$ transferida do estator para o rotor é dada, no referencial $dq$, pela interação entre as correntes e as tensões induzidas (força contra-eletromotriz):
