@@ -336,14 +336,16 @@ A potência instantânea de entrada nos terminais do estator no referencial $abc
 \end{equation}
 
 Utilizando a transformação de Park, e considerando a transformação 
-invariante em amplitude e a componente zero nula, a potência pode ser reescrita no referencial $dq0$:
+invariante em amplitude e a componente zero nula, a potência pode 
+ser reescrita no referencial $dq0$:
 
 \begin{equation}
     P_{dq} = \frac{3}{2} (v_d i_d + v_q i_q)
     \label{eq:potencia_dq}
 \end{equation}
 
-Substituindo as equações de tensão $v_d$ e $v_q$ na equação de potência (\ref{eq:vdq_flux_opened} em \ref{eq:potencia_dq}):
+Substituindo as equações de tensão $v_d$ e $v_q$ na equação de potência 
+(\ref{eq:vdq_flux_opened} em \ref{eq:potencia_dq}):
 
 \begin{equation}
 \begin{split}
@@ -362,41 +364,54 @@ Reagrupando os termos, podemos identificar três componentes distintas de potên
 \end{split}
 \end{equation}
 
-onde $P_{cu}$ representa as perdas resistivas no cobre, $P_{mag}$ é a taxa de variação da energia magnética armazenada, e $P_{em}$ é a potência eletromecânica convertida. Portanto, a potência eletromecânica é:
+onde $P_{cu}$ representa as perdas resistivas no cobre, $P_{mag}$ é a 
+taxa de variação da energia magnética armazenada, e $P_{em}$ é a potência 
+eletromecânica convertida. Portanto, a potência eletromecânica é:
 
 \begin{equation}
     P_{em} = \frac{3}{2} (e_d i_d + e_q i_q) + \frac{3}{2} \omega_e (L_d - L_q) i_d i_q
 \end{equation}
 
-O torque eletromagnético $T_e$ relaciona-se com a potência mecânica pela velocidade angular do rotor $\omega_m$. Considerando $\omega_e = P \omega_m$, onde $P$ é o número de pares de polos:
+O torque eletromagnético $T_e$ relaciona-se com a potência mecânica pela 
+velocidade angular do rotor $\omega_m$. Considerando $\omega_e = P \omega_m$, 
+onde $P$ é o número de pares de polos:
 
 \begin{equation}
     T_e = \frac{P_{em}}{\omega_m} = \frac{P P_{em}}{\omega_e}
 \end{equation}
 
-Substituindo a expressão de $P_{em}$ encontrada anteriormente:
+Substituindo a expressão de $P_{em}$:
 
 \begin{equation}
     T_e = \frac{3}{2} P \left[ \frac{e_d i_d + e_q i_q}{\omega_e} + (L_d - L_q) i_d i_q \right]
 \end{equation}
 
-Podemos separar o torque em duas componentes: o torque de alinhamento (ou síncrono), devido à interação com a força contra-eletromotriz, e o torque de relutância, devido à assimetria do rotor:
+Podemos separar o torque em duas componentes: o torque de alinhamento (ou síncrono), 
+devido à interação com a força contra-eletromotriz, e o torque de relutância, devido à assimetria do rotor:
 
 \begin{equation}
-    T_e = \underbrace{\frac{3}{2} P \frac{e_d i_d + e_q i_q}{\omega_e}}_{T_{sinc}} + \underbrace{\frac{3}{2} P (L_d - L_q) i_d i_q}_{T_{rel}}
+    T_e = 
+    \underbrace{\frac{3}{2} P \frac{e_d i_d + e_q i_q}{\omega_e}}_{T_{sinc}} + 
+    \underbrace{\frac{3}{2} P (L_d - L_q) i_d i_q}_{T_{rel}}
 \end{equation}
 
-O termo $T_{relutancia}$ surge em máquinas com saliência ($L_d \neq L_q$), sendo proporcional a $(L_d - L_q) I_d I_q$.
+O termo $T_{relutancia}$ surge em máquinas com saliência ($L_d \neq L_q$), 
+sendo proporcional a $(L_d - L_q) I_d I_q$.
 
-Para máquinas de ímãs permanentes montados na superfície (SPMSM), $L_d = L_q$, o que elimina o termo de torque de relutância.
+Para máquinas de ímãs permanentes com $L_d = L_q$, o torque de relutância se torna zero.
 
-No caso do PMSM com fluxo senoidal, onde $e_d = 0$ e $e_q = \omega_e \lambda_m$, a equação simplifica-se para a forma clássica:
+No caso do BLAC, onde $e_d = 0$ e $e_q = \omega_e \lambda_m$, a equação 
+simplifica-se para a forma clássica:
 
 \begin{equation}
     T_e = \frac{3}{2} P \lambda_m I_q
 \end{equation}
 
-Para o motor BLDC, como visto anteriormente, $e_d$ e $e_q$ variam com a posição do rotor, resultando em ondulações de torque se as correntes $I_d$ e $I_q$ forem mantidas constantes. A simulação utiliza a forma geral baseada nas componentes de força contra-eletromotriz para capturar este comportamento.
+Para o motor BLDC, como visto anteriormente, $e_d$ e $e_q$ variam com 
+a posição do rotor, resultando em ondulações de torque se as correntes 
+$I_d$ e $I_q$ forem mantidas constantes. A simulação utiliza a forma 
+geral baseada nas componentes de força contra-eletromotriz para capturar 
+este comportamento.
 
 A dinâmica mecânica é descrita por:
 
@@ -405,7 +420,9 @@ A dinâmica mecânica é descrita por:
     \label{eq:mech}
 \end{equation}
 
-onde $J$ é o momento de inércia, $\omega_m$ é a velocidade mecânica, $T_L$ é o torque de carga, $B$ é o coeficiente de atrito viscoso, e $T_c$ é o torque de atrito de Coulomb.
+onde $J$ é o momento de inércia, $\omega_m$ é a velocidade mecânica, 
+$T_L$ é o torque de carga, $B$ é o coeficiente de atrito viscoso, 
+e $T_c$ é o torque de atrito de Coulomb.
 
 \subsection{Modelo do Inversor}
 O Inversor de Fonte de Tensão (VSI) trifásico é modelado idealmente, assumindo que as tensões de referência geradas pelo controlador são aplicadas com precisão aos terminais do motor, limitadas apenas pela tensão do barramento CC $V_{bus}$. Os limites da Modulação por Largura de Pulso Vetorial Espacial (SVPWM) são considerados saturando a magnitude do vetor de tensão para $V_{bus}/\sqrt{3}$ para um movimento suave.
