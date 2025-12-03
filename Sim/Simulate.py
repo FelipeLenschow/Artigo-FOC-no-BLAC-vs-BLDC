@@ -94,7 +94,7 @@ if __name__ == "__main__":
     ax1.plot(data['time'], data['rpm_ref'], 'r--', label='RPM Ref')
     ax1.plot(data['time'], data['rpm_act'], 'b-', label='RPM Actual')
     ax1.set_ylabel('Speed (RPM)')
-    ax1.set_title('BLDC FOC Simulation')
+    ax1.set_title('FOC Simulation')
     ax1.legend()
     ax1.grid(True)
 

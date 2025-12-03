@@ -14,14 +14,14 @@
 
 \lstset{
     language=Python,
-    basicstyle=\ttfamily\footnotesize,
+    basicstyle=\ttfamily\tiny,
     keywordstyle=\color{blue},
     stringstyle=\color{red},
     commentstyle=\color{green!60!black},
     numbers=left,
     numberstyle=\tiny,
     stepnumber=1,
-    numbersep=5pt,
+    numbersep=6pt,
     backgroundcolor=\color{white},
     showspaces=false,
     showstringspaces=false,
@@ -31,6 +31,9 @@
     captionpos=b,
     breaklines=true,
     breakatwhitespace=false,
+    columns=flexible,
+    xleftmargin=0.5cm,
+    % xrightmargin=0.5cm,
     escapeinside={\%*}{*)}
 }
 
@@ -539,7 +542,7 @@ Os ganhos obtidos para o controlador de velocidade são $k_{p} = 1.25$ e $k_{i} 
 \subsection{Implementação}
 Para validar a análise comparativa, foi desenvolvido um simulador modular em 
 Python, projetado para flexibilidade e facilidade de manutenção, pode ser 
-visto no anexo \ref{app:simulator}. A estrutura 
+visto no apêndice \ref{app:simulator}. A estrutura 
 do simulador é baseada em componentes independentes que interagem através de 
 interfaces bem definidas, permitindo a substituição de modelos de motor e 
 estratégias de controle sem a necessidade de reescrever o código principal.
@@ -630,29 +633,23 @@ Os resultados confirmam que, embora o FOC possa controlar a velocidade de um mot
 \label{app:simulator}
 Os códigos fonte da simulação desenvolvida em Python são apresentados a seguir.
 
-% \subsection{BLACMotor.py}
-% \lstinputlisting{../Sim/BLACMotor.py}
+\subsection{Simulate.py}
+\lstinputlisting{../Sim/Simulate.py}
 
-% \subsection{BLDCMotor.py}
-% \lstinputlisting{../Sim/BLDCMotor.py}
+\subsection{BLACMotor.py}
+\lstinputlisting{../Sim/BLACMotor.py}
 
-% \subsection{FOCController.py}
-% \lstinputlisting{../Sim/FOCController.py}
+\subsection{BLDCMotor.py}
+\lstinputlisting{../Sim/BLDCMotor.py}
 
-% \subsection{Inverter.py}
-% \lstinputlisting{../Sim/Inverter.py}
+\subsection{FOCController.py}
+\lstinputlisting{../Sim/FOCController.py}
 
-% \subsection{Sensors.py}
-% \lstinputlisting{../Sim/Sensors.py}
+\subsection{Inverter.py}
+\lstinputlisting{../Sim/Inverter.py}
 
-% \subsection{Simulate.py}
-% \lstinputlisting{../Sim/Simulate.py}
-
-% \subsection{compare\_motors.py}
-% \lstinputlisting{../Sim/compare_motors.py}
-
-% \subsection{PlotBackEMF.py}
-% \lstinputlisting{../Sim/PlotBackEMF.py}
+\subsection{Sensors.py}
+\lstinputlisting{../Sim/Sensors.py}
 
 \begin{thebibliography}{00}
 \bibitem{pillay1989} P. Pillay and R. Krishnan, "Modeling, simulation, and analysis of permanent-magnet motor drives. I. The permanent-magnet synchronous motor drive," IEEE Transactions on Industry Applications, vol. 25, no. 2, pp. 265-273, March-April 1989.
