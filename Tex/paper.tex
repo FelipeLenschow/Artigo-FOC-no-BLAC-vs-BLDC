@@ -51,22 +51,25 @@ felipe.lenschow@edu.udesc.br}
 \maketitle
 
 \begin{abstract}
-Este artigo apresenta a modelagem e simulação do acionamento 
-utilizando Controle Orientado a Campo (FOC), comparando seu desempenho quando 
-aplicado a um motor de corrente alternada sem escovas (BLAC), para o qual foi 
-projetado, e a um Motor de Corrente Contínua Sem Escovas (BLDC). 
-O modelo matemático no referencial dq é derivado 
-para ambas as máquinas, e uma estratégia de controle empregando controladores 
-Proporcional-Integral (PI) é implementada. A simulação, desenvolvida em Python, 
-demonstra que, embora o FOC mantenha um controle preciso de velocidade para ambos 
-os motores, ele introduz um ripple de torque significativo no motor BLDC devido à 
-sua força contra-eletromotriz trapezoidal. Os resultados evidenciam as limitações 
-do FOC padrão para máquinas BLDC em aplicações que exigem baixo ripple de torque.
+This paper presents the modeling and simulation of the drive using 
+Field-Oriented Control (FOC), comparing its performance when applied 
+to a Brushless AC (BLAC) motor, for which it was designed, and to a 
+Brushless DC (BLDC) motor. The mathematical model in the dq reference 
+frame is derived for both machines, and the control strategy employed 
+is the Proportional-Integral (PI) controller, following the development 
+of \cite{b3}. The simulation, developed in Python, demonstrates that, 
+although FOC maintains precise speed control for both motors, it 
+introduces significant torque ripple in the BLDC motor due to its 
+trapezoidal back-electromotive force. The results highlight the 
+limitations of standard FOC for BLDC machines in applications requiring 
+low torque ripple.
 \end{abstract}
 
 \begin{IEEEkeywords}
-PMSM, Controle Orientado a Campo, Simulação, Python, Acionamento de Motor
+PMSM, BLDC, BLAC, FOC, Simulation, Python, Motor Control
 \end{IEEEkeywords}
+
+% \tableofcontents
 
 \section{Introdução}
 Motores Síncronos de Ímãs Permanentes (PMSMs) são amplamente utilizados em 
@@ -78,16 +81,25 @@ de fluxo e torque transformando as correntes trifásicas do estator para
 um referencial girante dq, alinhado com o fluxo do rotor \cite{pillay1989}, 
 porém, tal método de controle apresenta limitações quando aplicado a motores 
 de corrente contínua sem escovas (BLDC), que possuem uma força contra-eletromotriz 
-trapezoidal, em vez senoidal como nos motores de corrente alternada sem escovas (BLACs).
+trapezoidal, em vez de senoidal como nos motores de corrente alternada sem escovas (BLACs).
 
 Este artigo desenvolve um ambiente de simulação para um 
 sistema de acionamento PMSM. A simulação inclui a física do motor, 
-o inversor de fonte de tensão e o algoritmo FOC. O objetivo é 
+o inversor de frequência e o algoritmo FOC. O objetivo é 
 fornecer uma compreensão clara da dinâmica do sistema, validando o 
 controle desenvolvido em \cite{b3}, bem como mostrar os efeitos do 
 mesmo FOC na dinâmica do motor BLDC.
 
+A organização deste trabalho é apresentada a seguir. A Seção \ref{sec:model} 
+descreve o modelo matemático do sistema e as diferenças entre os motores. 
+A Seção \ref{sec:control} detalha a estratégia de controle 
+e o projeto dos controladores. 
+A Seção \ref{sec:simulator} apresenta a implementação do simulador. 
+A Seção \ref{sec:results} discute os resultados obtidos e, finalmente, 
+a Seção \ref{sec:conclusion} conclui o artigo.
+
 \section{Modelo do Sistema}
+\label{sec:model}
 
 \subsection{Modelo de Motores PMSC}
 O modelo dinâmico dos PMSMs pode ser derivado a partir das equações de tensão de fase. 
@@ -213,7 +225,6 @@ entre os eixos $d$ e $q$ devido à velocidade angular elétrica $\omega_e$:
 Em seguida, aplica-se a transformada de Park na equação de fluxo (2):
 
 \begin{equation}
-    \boldsymbol{\psi}_{dq0} = 
     \mathbf{T} \boldsymbol{\psi}_{abc} = 
     \mathbf{T} (\mathbf{L}_{abc} \mathbf{i}_{abc} + 
     \boldsymbol{\psi}_{m,abc})
@@ -453,6 +464,7 @@ Atrito viscoso & $B$ & 0.0057 Nms/rad \\
 \end{table}
 
 \section{Estratégia de Controle}
+\label{sec:control}
 
 A estratégia de controle adotada é o Controle Orientado a Campo (FOC), que permite 
 o controle desacoplado de torque e fluxo. O diagrama de blocos geral do sistema de 
@@ -536,9 +548,9 @@ e atrito de Coulomb como distúrbios e o atrito viscoso desprezível frente
 
 Os ganhos obtidos para o controlador de velocidade são $k_{p} = 1.25$ e $k_{i} = 55$.
 
-\section{Simulação}
+\section{Simulador}
+\label{sec:simulator}
 
-\subsection{Implementação}
 Para validar a análise comparativa, foi desenvolvido um simulador modular em 
 Python, projetado para flexibilidade e facilidade de manutenção, pode ser 
 visto no apêndice \ref{app:simulator}. A estrutura 
@@ -594,6 +606,7 @@ O perfil de simulação seque o padrão desenvolvido em \cite{b3}, que consiste 
 \end{itemize}
 
 \section{Resultados}
+\label{sec:results}
 A Fig. \ref{fig:results_speed_torque} e a Fig. \ref{fig:results_currents} mostram 
 a resposta do sistema comparando o motor BLAC e o motor BLDC sob o mesmo controle FOC.
 
@@ -622,6 +635,7 @@ a frequência do ripple de torque também é dobrada.
 As correntes $I_d$ e $I_q$ no caso do BLDC (Fig. \ref{fig:results_currents}) mostram oscilações claras. O controlador PI de corrente tenta compensar a variação da Back-EMF trapezoidal, que não é constante no referencial $dq$, resultando nessas ondulações. Embora a velocidade média seja mantida, a qualidade do torque é degradada, o que pode gerar vibrações e ruído acústico em aplicações reais.
 
 \section{Conclusão}
+\label{sec:conclusion}
 Uma simulação completa de um acionamento PMSM usando FOC foi apresentada e comparada com a aplicação da mesma estratégia em um motor BLDC. A implementação modular em Python permitiu uma análise detalhada das diferenças de desempenho.
 
 Os resultados confirmam que, embora o FOC possa controlar a velocidade de um motor BLDC com eficácia, ele introduz um ripple de torque considerável devido ao descasamento entre a estratégia de controle (baseada em modelos senoidais) e a física do motor (Back-EMF trapezoidal). Para aplicações de alto desempenho utilizando motores BLDC, estratégias de minimização de ripple de torque ou o uso de controle trapezoidal dedicado seriam mais apropriados. O ambiente de simulação desenvolvido serve como uma ferramenta valiosa para estudar e validar tais estratégias de controle avançado.

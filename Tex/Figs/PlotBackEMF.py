@@ -78,6 +78,19 @@ def generate_plot():
         ed_blac_list.append(vd_blac)
         eq_blac_list.append(vq_blac)
 
+    # Font sizes
+    TITLE_SIZE = 22
+    LABEL_SIZE = 18
+    LEGEND_SIZE = 10
+
+    # Enable LaTeX rendering and use Times font (matches IEEEtran)
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "serif",
+        "font.serif": ["Times New Roman"],
+        "text.latex.preamble": r"\usepackage{mathptmx}",
+    })
+
     plt.figure(figsize=(10, 5))
     
     # Plot phases B and C in light gray (background)
@@ -94,11 +107,12 @@ def generate_plot():
     plt.plot(theta_e, ed_blac_list, label=r'$e_{d,BLAC}$', linestyle='--', linewidth=2, color='orange', zorder=2)
     plt.plot(theta_e, eq_blac_list, label=r'$e_{q,BLAC}$', linestyle='--', linewidth=2, color='lime', zorder=2)
     
-    plt.xlabel('Ângulo elétrico (rad)')
-    plt.ylabel('Amplitude (Normalizada)')
-    plt.title('Comparação de Back-EMF: BLDC vs BLAC (ABC e DQ Frames)')
-    plt.legend(loc='upper right', ncol=2)
-    plt.grid(True)
+    plt.xlabel('Ângulo Elétrico (rad)', fontsize=LABEL_SIZE)
+    plt.ylabel('Amplitude (Normalizada)', fontsize=LABEL_SIZE)
+    plt.title('Comparação de Back-EMF: BLDC vs BLAC', fontsize=TITLE_SIZE)
+    plt.legend(loc='upper right', ncol=2, fontsize=LEGEND_SIZE)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.tick_params(axis='both', which='major', labelsize=10)
 
     plt.tight_layout()
     

@@ -88,26 +88,41 @@ def plot_comparisons(pmsm_data, bldc_data):
     # Use a style suitable for papers
     plt.style.use('default')
     
+    # Enable LaTeX rendering and use Times font (matches IEEEtran)
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "serif",
+        "font.serif": ["Times New Roman"],
+        "text.latex.preamble": r"\usepackage{mathptmx}",
+    })
+    
+    # Font sizes
+    TITLE_SIZE = 22
+    LABEL_SIZE = 18
+    LEGEND_SIZE = 10
+    
     fig1, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 8), sharex=True)
 
     # Plot 1: Speed
-    ax1.plot(pmsm_data['time'], pmsm_data['rpm_ref'], 'k--', label='Reference', linewidth=1.5, alpha=0.6)
-    ax1.plot(pmsm_data['time'], pmsm_data['rpm_act'], 'b-', label='PMSM Speed', linewidth=1.5)
-    ax1.plot(bldc_data['time'], bldc_data['rpm_act'], 'r-', label='BLDC Speed', linewidth=1.5)
-    ax1.set_ylabel('Speed (RPM)')
-    ax1.set_title('Speed Response Comparison')
-    ax1.legend(loc='upper right')
+    ax1.plot(pmsm_data['time'], pmsm_data['rpm_ref'], 'k--', label='Referência', linewidth=1.5, alpha=0.6)
+    ax1.plot(pmsm_data['time'], pmsm_data['rpm_act'], 'b-', label='Velocidade BLAC', linewidth=1.5)
+    ax1.plot(bldc_data['time'], bldc_data['rpm_act'], 'r-', label='Velocidade BLDC', linewidth=1.5)
+    ax1.set_ylabel('Velocidade (RPM)', fontsize=LABEL_SIZE)
+    ax1.set_title('Comparação de Resposta de Velocidade', fontsize=TITLE_SIZE)
+    ax1.legend(loc='upper right', fontsize=LEGEND_SIZE)
     ax1.grid(True, linestyle='--', alpha=0.7)
+    ax1.tick_params(axis='both', which='major', labelsize=10)
 
     # Plot 2: Torque
-    ax2.plot(pmsm_data['time'], pmsm_data['Tload'], 'k--', label='Load Torque', linewidth=1.5, alpha=0.6)
-    ax2.plot(pmsm_data['time'], pmsm_data['Te'], 'b-', label='PMSM Torque', linewidth=1.5)
-    ax2.plot(bldc_data['time'], bldc_data['Te'], 'r-', label='BLDC Torque', linewidth=1.5, alpha=0.8)
-    ax2.set_ylabel('Torque (Nm)')
-    ax2.set_xlabel('Time (s)')
-    ax2.set_title('Torque Response Comparison')
-    ax2.legend(loc='upper right')
+    ax2.plot(pmsm_data['time'], pmsm_data['Tload'], 'k--', label='Torque de Carga', linewidth=1.5, alpha=0.6)
+    ax2.plot(pmsm_data['time'], pmsm_data['Te'], 'b-', label='Torque BLAC', linewidth=1.5)
+    ax2.plot(bldc_data['time'], bldc_data['Te'], 'r-', label='Torque BLDC', linewidth=1.5, alpha=0.8)
+    ax2.set_ylabel('Torque (Nm)', fontsize=LABEL_SIZE)
+    ax2.set_xlabel('Tempo (s)', fontsize=LABEL_SIZE)
+    ax2.set_title('Comparação de Resposta de Torque', fontsize=TITLE_SIZE)
+    ax2.legend(loc='upper right', fontsize=LEGEND_SIZE)
     ax2.grid(True, linestyle='--', alpha=0.7)
+    ax2.tick_params(axis='both', which='major', labelsize=10)
     
     plt.tight_layout()
     output_path1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'comparison_speed_torque.png')
@@ -117,21 +132,23 @@ def plot_comparisons(pmsm_data, bldc_data):
     fig2, (ax3, ax4) = plt.subplots(2, 1, figsize=(8, 8), sharex=True)
     
     # Plot 3: Iq Current
-    ax3.plot(pmsm_data['time'], pmsm_data['Iq'], 'b-', label='PMSM $I_q$', linewidth=1.5)
+    ax3.plot(pmsm_data['time'], pmsm_data['Iq'], 'b-', label='BLAC $I_q$', linewidth=1.5)
     ax3.plot(bldc_data['time'], bldc_data['Iq'], 'r-', label='BLDC $I_q$', linewidth=1.5, alpha=0.8)
-    ax3.set_ylabel('Current $I_q$ (A)')
-    ax3.set_title('$I_q$ Current Comparison')
-    ax3.legend(loc='upper right')
+    ax3.set_ylabel('Corrente $I_q$ (A)', fontsize=LABEL_SIZE)
+    ax3.set_title('Comparação da Corrente $I_q$', fontsize=TITLE_SIZE)
+    ax3.legend(loc='upper right', fontsize=LEGEND_SIZE)
     ax3.grid(True, linestyle='--', alpha=0.7)
+    ax3.tick_params(axis='both', which='major', labelsize=10)
 
     # Plot 4: Id Current
-    ax4.plot(pmsm_data['time'], pmsm_data['Id'], 'b-', label='PMSM $I_d$', linewidth=1.5)
+    ax4.plot(pmsm_data['time'], pmsm_data['Id'], 'b-', label='BLAC $I_d$', linewidth=1.5)
     ax4.plot(bldc_data['time'], bldc_data['Id'], 'r-', label='BLDC $I_d$', linewidth=1.5, alpha=0.8)
-    ax4.set_ylabel('Current $I_d$ (A)')
-    ax4.set_xlabel('Time (s)')
-    ax4.set_title('$I_d$ Current Comparison')
-    ax4.legend(loc='upper right')
+    ax4.set_ylabel('Corrente $I_d$ (A)', fontsize=LABEL_SIZE)
+    ax4.set_xlabel('Tempo (s)', fontsize=LABEL_SIZE)
+    ax4.set_title('Comparação da Corrente $I_d$', fontsize=TITLE_SIZE)
+    ax4.legend(loc='upper right', fontsize=LEGEND_SIZE)
     ax4.grid(True, linestyle='--', alpha=0.7)
+    ax4.tick_params(axis='both', which='major', labelsize=10)
 
     plt.tight_layout()
     output_path2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'comparison_currents.png')
