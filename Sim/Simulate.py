@@ -35,7 +35,6 @@ if __name__ == "__main__":
     t = 0.0
     for k in range(num_steps):
         t = k * Ts
-        history['time'][k] = t
 
         # ---------------------------------------------------------
         # 1. INPUTS & PROFILE
@@ -79,6 +78,7 @@ if __name__ == "__main__":
         # ---------------------------------------------------------
         # 6. DATA LOGGING
         # ---------------------------------------------------------
+        history['time'][k] = t
         history['rpm_ref'][k] = RPMref
         history['rpm_act'][k] = motor.Wr * 60 / (2*math.pi)
         history['Iq'][k] = motor.Iq

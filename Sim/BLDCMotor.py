@@ -1,5 +1,5 @@
 import math
-import numpy as np
+import Transforms
 
 class BLDCMotor:
     def __init__(self, Ts):
@@ -44,29 +44,10 @@ class BLDCMotor:
         ea = -E_mag * self._trapezoidal_shape(self.theta_e)
         eb = -E_mag * self._trapezoidal_shape(self.theta_e - 2*math.pi/3)
         ec = -E_mag * self._trapezoidal_shape(self.theta_e + 2*math.pi/3)
-
-        cos_t = math.cos(self.theta_e)
-        sin_t = math.sin(self.theta_e)
         
-        e_alpha = (2/3) * (ea - 0.5*eb - 0.5*ec)
-        e_beta  = (2/3) * (math.sqrt(3)/2 * (eb - ec))
-        
-        ed = e_alpha * cos_t + e_beta * sin_t
-        eq = -e_alpha * sin_t + e_beta * cos_t
-
-        cos_t_m = math.cos(self.theta_e - 2*math.pi/3)
-        sin_t_m = math.sin(self.theta_e - 2*math.pi/3)
-        cos_t_p = math.cos(self.theta_e + 2*math.pi/3)
-        sin_t_p = math.sin(self.theta_e + 2*math.pi/3)
-
-        Vd_ref = (2.0/3.0) * (Va * cos_t + Vb * cos_t_m + Vc * cos_t_p)
-        Vq_ref = (2.0/3.0) * (-Va * sin_t - Vb * sin_t_m - Vc * sin_t_p)
-
-        I_alpha = Ia
-        I_beta = (Ia + 2.0*Ib) / math.sqrt(3.0)
-        
-        Id_meas = I_alpha * cos_t + I_beta * sin_t
-        Iq_meas = -I_alpha * sin_t + I_beta * cos_t
+        ed, eq = Transforms.abc_to_dq(ea, eb, ec, self.theta_e)
+        Vd_ref, Vq_ref = Transforms.abc_to_dq(Va, Vb, Vc, self.theta_e)
+        Id_meas, Iq_meas = Transforms.abc_to_dq(Ia, Ib, Ic, self.theta_e)
 
         dId = (1.0/self.Ld) * (Vd_ref - self.Rs*Id_meas + We*self.Lq*Iq_meas - ed)
         dIq = (1.0/self.Lq) * (Vq_ref - self.Rs*Iq_meas - We*self.Ld*Id_meas - eq)
@@ -75,10 +56,10 @@ class BLDCMotor:
         Iq_next = Iq_meas + self.Ts * dIq
         
         if abs(We) > 1e-3:
-            Te = 1.5 * self.Npp * (ed * Id_next + eq * Iq_next) / We
+            Te = 1.5 * self.Npp * (ed * Id_next + eq * Iq_next) / We + \
+            1.5 * self.Npp * (self.Ld - self.Lq) * Id_next * Iq_next
         else:
             Te = 1.5 * self.Npp * self.Lambda_m * Iq_next
-
         
         Tc_dir = self.Tc if self.Wr > 0 else (-self.Tc if self.Wr < 0 else 0)
         

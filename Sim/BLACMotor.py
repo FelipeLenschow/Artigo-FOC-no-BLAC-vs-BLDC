@@ -1,5 +1,5 @@
 import math
-import numpy as np
+import Transforms
 
 class BLACMotor:
     def __init__(self, Ts):
@@ -24,37 +24,24 @@ class BLACMotor:
         self.theta_e = self.Npp * self.theta
         self.theta_e = self.theta_e % (2 * math.pi)
 
-        cos_t = math.cos(self.theta_e)
-        sin_t = math.sin(self.theta_e)
-        cos_t_m = math.cos(self.theta_e - 2*math.pi/3)
-        sin_t_m = math.sin(self.theta_e - 2*math.pi/3)
-        cos_t_p = math.cos(self.theta_e + 2*math.pi/3)
-        sin_t_p = math.sin(self.theta_e + 2*math.pi/3)
-
-        Vd_ref = (2.0/3.0) * (Va * cos_t + Vb * cos_t_m + Vc * cos_t_p)
-        Vq_ref = (2.0/3.0) * (-Va * sin_t - Vb * sin_t_m - Vc * sin_t_p)
-
-        I_alpha = Ia
-        I_beta = (Ia + 2.0*Ib) / math.sqrt(3.0)
+        Vd_ref, Vq_ref = Transforms.abc_to_dq(Va, Vb, Vc, self.theta_e)
         
-        Id_meas = I_alpha * cos_t + I_beta * sin_t
-        Iq_meas = -I_alpha * sin_t + I_beta * cos_t
-
-        g11 = 1 - (self.Ts * (self.Rs / self.Ld))
-        g12 = (We * self.Lq * self.Ts) / self.Ld
-        g21 = -We * self.Ld * self.Ts / self.Lq
-        g22 = 1 - self.Rs * self.Ts / self.Lq
-        h11 = self.Ts / self.Ld
-        h22 = self.Ts / self.Lq
-        i2 = -We * self.Lambda_m * self.Ts / self.Lq
+        Id_meas, Iq_meas = Transforms.abc_to_dq(Ia, Ib, Ic, self.theta_e)
 
         ed = 0.0
         eq = We * self.Lambda_m
 
-        Id_next = g11 * Id_meas + g12 * Iq_meas + h11 * Vd_ref
-        Iq_next = g21 * Id_meas + g22 * Iq_meas + h22 * Vq_ref + i2
+        dId = (1.0/self.Ld) * (Vd_ref - self.Rs*Id_meas + We*self.Lq*Iq_meas - ed)
+        dIq = (1.0/self.Lq) * (Vq_ref - self.Rs*Iq_meas - We*self.Ld*Id_meas - eq)
         
-        Te = 1.5 * self.Npp * Iq_next * (self.Lambda_m + (self.Ld - self.Lq) * Id_next)
+        Id_next = Id_meas + self.Ts * dId
+        Iq_next = Iq_meas + self.Ts * dIq
+        
+        if abs(We) > 1e-3:
+            Te = 1.5 * self.Npp * (ed * Id_next + eq * Iq_next) / We + \
+            1.5 * self.Npp * (self.Ld - self.Lq) * Id_next * Iq_next
+        else:
+            Te = 1.5 * self.Npp * self.Lambda_m * Iq_next
 
         Tc_dir = self.Tc if self.Wr > 0 else (-self.Tc if self.Wr < 0 else 0)
         

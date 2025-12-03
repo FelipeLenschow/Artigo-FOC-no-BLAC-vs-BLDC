@@ -101,7 +101,7 @@ def plot_comparisons(pmsm_data, bldc_data):
     LABEL_SIZE = 18
     LEGEND_SIZE = 10
     
-    fig1, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 8), sharex=True)
+    fig1, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
 
     # Plot 1: Speed
     ax1.plot(pmsm_data['time'], pmsm_data['rpm_ref'], 'k--', label='Referência', linewidth=1.5, alpha=0.6)

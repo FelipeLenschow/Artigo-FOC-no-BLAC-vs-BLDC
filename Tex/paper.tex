@@ -33,7 +33,9 @@
     breakatwhitespace=false,
     columns=flexible,
     xleftmargin=0.5cm,
-    escapeinside={\%*}{*)}
+    escapeinside={\%*}{*)},
+    inputencoding=utf8,
+    extendedchars=true,
 }
 
 \begin{document}
@@ -325,8 +327,6 @@ No referencial síncrono $dq$, as componentes da força contra-eletromotriz torn
 
 Isso simplifica o controle, pois as referências de corrente podem ser constantes para torque constante.
 
-
-
 \subsubsection{BLDC}
 O motor BLDC possui uma distribuição de fluxo trapezoidal. Ao contrário do BLAC, as componentes 
 $e_d$ e $e_q$ no referencial síncrono não são constantes, mas variam com a posição do rotor, 
@@ -396,22 +396,18 @@ onde $P$ é o número de pares de polos:
     T_e = \frac{P_{em}}{\omega_m} = \frac{P P_{em}}{\omega_e}
 \end{equation}
 
-Substituindo a expressão de $P_{em}$:
-
-\begin{equation}
-    T_e = \frac{3}{2} P \left[ \frac{e_d i_d + e_q i_q}{\omega_e} + (L_d - L_q) i_d i_q \right]
-\end{equation}
-
-Podemos separar o torque em duas componentes: o torque de alinhamento (ou síncrono), 
-devido à interação com a força contra-eletromotriz, e o torque de relutância, devido à assimetria do rotor:
+Substituindo a expressão de $P_{em}$, podemos separar o torque em 
+duas componentes: o torque de alinhamento (ou síncrono), 
+devido à interação com a força contra-eletromotriz, e o 
+torque de relutância, devido à assimetria do rotor:
 
 \begin{equation}
     T_e = 
     \underbrace{\frac{3}{2} P \frac{e_d i_d + e_q i_q}{\omega_e}}_{T_{sinc}} + 
-    \underbrace{\frac{3}{2} P (L_d - L_q) i_d i_q}_{T_{rel}}
+    \underbrace{\frac{3}{2} P (L_d - L_q) i_d i_q}_{T_{relut}}
 \end{equation}
 
-O termo $T_{relutancia}$ surge em máquinas com saliência ($L_d \neq L_q$), 
+O termo $T_{relut}$ surge em máquinas com saliência ($L_d \neq L_q$), 
 sendo proporcional a $(L_d - L_q) I_d I_q$.
 
 Para máquinas de ímãs permanentes com $L_d = L_q$, o torque de relutância se torna zero.
@@ -466,8 +462,8 @@ Atrito viscoso & $B$ & 0.0057 Nms/rad \\
 \section{Estratégia de Controle}
 \label{sec:control}
 
-A estratégia de controle adotada é o Controle Orientado a Campo (FOC), que permite 
-o controle desacoplado de torque e fluxo. O diagrama de blocos geral do sistema de 
+A estratégia de controle adotada é o Controle Orientado a Campo (FOC) projetado 
+para um motor BLAC. O diagrama de blocos geral do sistema de 
 controle é apresentado na Fig. \ref{fig:foc_diagram}. O sistema consiste em uma malha 
 externa de velocidade e duas malhas internas de corrente ($I_d$ e $I_q$).
 
@@ -495,7 +491,7 @@ do vetor de tensão para $V_{bus}/\sqrt{3}$ para um movimento suave.
 \subsection{Projeto do Controlador de Corrente}
 O controle de corrente é realizado no referencial síncrono $dq$, utilizando dois 
 controladores PI independentes para regular as correntes $I_d$ e $I_q$.
-O diagrama de blocos do controlador de corrente implementado é mostrado 
+O diagrama de blocos do controlador de corrente é mostrado 
 na Fig. \ref{fig:current_controler}.
 
 \begin{figure}[htbp]
@@ -504,7 +500,14 @@ na Fig. \ref{fig:current_controler}.
 \label{fig:current_controler}
 \end{figure}
 
-A banda passante ($\omega_b$) da malha de corrente é projetada para ser aproximadamente 10 vezes maior que a da malha de velocidade, garantindo o desacoplamento dinâmico. Neste trabalho, adotou-se $\omega_b = 350$ Hz e $\xi = 4$. Os ganhos resultantes são calculados conforme as equações analíticas apresentadas em \cite{b3}, tendo como premissas que o acoplamento entre os eixos $d$ e $q$ é tratado como um distúrbio a ser compensado, que a dinâmica dos eixos $d$ e $q$ são iguais (válido para $L_d$ = $L_q$), e que a resistencia do motor seja muito menor que o ganho do controlador:
+A banda passante ($\omega_b$) da malha de corrente é projetada para ser aproximadamente 
+10 vezes maior que a da malha de velocidade, garantindo o desacoplamento dinâmico. 
+Neste trabalho, adotou-se $\omega_b = 350$ Hz e $\xi = 4$, seguindo o 
+controlador desenvolvido por \cite{b3}. Os ganhos resultantes 
+são calculados, tendo como premissas que o acoplamento entre os 
+eixos $d$ e $q$ é tratado como um distúrbio a ser compensado, 
+que a dinâmica dos eixos $d$ e $q$ são iguais (válido para $L_d$ = $L_q$), 
+e que a resistencia do motor seja muito menor que o ganho do controlador:
 
 \begin{equation}
     k_{p} = \frac{\xi \omega_b 2 L_q}{\sqrt{2\xi^2 + 1 + \sqrt{(1+2\xi)^2+1}}}
@@ -534,7 +537,8 @@ O projeto do controlador assume que a dinâmica da malha de corrente é
 suficientemente rápida para ser considerada ideal (ganho unitário) na 
 faixa de frequências de interesse da malha de velocidade. A banda 
 passante escolhida foi $\omega_b = 35$ Hz com um fator de amortecimento 
-$\xi = 1.0$. As equações para os ganhos, considerando o torque de carga 
+$\xi = 1.0$, novamente seguindo o controlador desenvolvido por \cite{b3}. 
+As equações para os ganhos, considerando o torque de carga 
 e atrito de Coulomb como distúrbios e o atrito viscoso desprezível frente 
 à inércia, são dadas por:
 
@@ -561,8 +565,8 @@ estratégias de controle sem a necessidade de reescrever o código principal.
 A arquitetura do simulador é composta pelos seguintes módulos principais:
 \begin{itemize}
     \item \textbf{Motor}: Define a física da máquina elétrica. Foram implementadas 
-    classes distintas para \texttt{BLDCMotor} e \texttt{BLACMotor}, ambas herdando 
-    ou seguindo uma interface comum que expõe métodos para o cálculo da dinâmica 
+    classes distintas para o motor BLDC e para o BLAC, ambas herdando 
+    uma interface comum que expõe métodos para o cálculo da dinâmica 
     eletromecânica. Isso permite a troca direta entre os modelos de motor no script 
     principal.
     \item \textbf{Controller}: Implementa a lógica de controle, como o FOC. Este 
@@ -596,7 +600,7 @@ motores BLDC e BLAC, garantindo que as mesmas condições de controle e simulaç
 fossem aplicadas a ambos os casos, isolando as diferenças intrínsecas das máquinas.
  Os parâmetros do motor utilizados são apresentados na Tabela \ref{tab:motor_params}.
 
-O perfil de simulação seque o padrão desenvolvido em \cite{b3}, que consiste em:
+O perfil de simulação segue o padrão desenvolvido em \cite{b3}, que consiste em:
 \begin{itemize}
     \item $t=0.0s$: Início em 40 RPM.
     \item $t=0.2s$: Degrau de torque de carga de 20 Nm aplicado.
@@ -616,15 +620,17 @@ a resposta do sistema comparando o motor BLAC e o motor BLDC sob o mesmo control
 \label{fig:results_speed_torque}
 \end{figure}
 
+O controlador de velocidade rastreia a referência de RPM com precisão para ambos os 
+motores, mesmo tendo uma leve oscilação e ter o comportamento levemente mais rápido 
+no caso do BLDC.
+
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=\columnwidth]{Figs/comparison_currents.png}}
 \caption{Comparação das Correntes $I_d$ e $I_q$ entre BLAC e BLDC.}
 \label{fig:results_currents}
 \end{figure}
 
-O controlador de velocidade rastreia a referência de RPM com precisão para ambos os 
-motores, mesmo tendo uma leve oscilação e ter o comportamento levemente mais rápido 
-no caso do BLDC. Já para o torque, observa-se que o motor BLDC apresenta um ripple 
+Já para o torque, observa-se que o motor BLDC apresenta um ripple 
 significativo em comparação com o BLAC. Este ripple é intrínseco à aplicação do controle 
 FOC, projetado para formas de onda senoidais, em uma máquina com força contra-eletromotriz 
 trapezoidal. A frequência fundamental deste ripple é de 6 vezes a frequência elétrica, 
@@ -636,15 +642,37 @@ As correntes $I_d$ e $I_q$ no caso do BLDC (Fig. \ref{fig:results_currents}) mos
 
 \section{Conclusão}
 \label{sec:conclusion}
-Uma simulação completa de um acionamento PMSM usando FOC foi apresentada e comparada com a aplicação da mesma estratégia em um motor BLDC. A implementação modular em Python permitiu uma análise detalhada das diferenças de desempenho.
+Uma simulação completa de um acionamento PMSM usando FOC foi apresentada 
+e comparada com a aplicação da mesma estratégia em um motor BLDC. A 
+implementação modular em Python permitiu uma análise detalhada das 
+diferenças de desempenho.
 
-Os resultados confirmam que, embora o FOC possa controlar a velocidade de um motor BLDC com eficácia, ele introduz um ripple de torque considerável devido ao descasamento entre a estratégia de controle (baseada em modelos senoidais) e a física do motor (Back-EMF trapezoidal). Para aplicações de alto desempenho utilizando motores BLDC, estratégias de minimização de ripple de torque ou o uso de controle trapezoidal dedicado seriam mais apropriados. O ambiente de simulação desenvolvido serve como uma ferramenta valiosa para estudar e validar tais estratégias de controle avançado.
+Os resultados confirmam que, embora o FOC possa controlar a velocidade 
+de um motor BLDC com eficácia, ele introduz um ripple de torque 
+considerável devido ao descasamento entre a estratégia de controle 
+(baseada em modelos senoidais) e a física do motor (Back-EMF trapezoidal). 
+Para aplicações de alto desempenho utilizando motores BLDC, estratégias 
+de minimização de ripple de torque ou o uso de controle trapezoidal 
+dedicado seriam mais apropriados. O ambiente de simulação desenvolvido 
+serve como uma ferramenta valiosa para estudar e validar tais estratégias 
+de controle avançado.
+
+
+\begin{thebibliography}{00}
+\bibitem{pillay1989} P. Pillay and R. Krishnan, "Modeling, simulation, and analysis of permanent-magnet motor drives. I. The permanent-magnet synchronous motor drive," IEEE Transactions on Industry Applications, vol. 25, no. 2, pp. 265-273, March-April 1989.
+\bibitem{b2} MathWorks, "BLDC - Three-winding brushless direct current motor with trapezoidal flux distribution," [Online]. Available: https://www.mathworks.com/help/sps/ref/bldc.html.
+\bibitem{b4} MathWorks, "PMSM - Permanent Magnet Synchronous Motor," [Online]. Available: https://www.mathworks.com/help/sps/ref/pmsm.html.
+\bibitem{b3} Matheus Alexandre Bevilaqua, "Implementação do Controle de Velocidade de Motores Síncronos a Ímãs Permanentes em Plataforma LabVIEW FPGA", Universidade do Estado de Santa Catarina, 2015.
+% \bibitem{krause} P. C. Krause, O. Wasynczuk, and S. D. Sudhoff, \textit{Analysis of Electric Machinery and Drive Systems}, 2nd ed. Piscataway, NJ: IEEE Press, 2002.
+\end{thebibliography}
 
 \appendices
 
 \section{Código da Simulação}
 \label{app:simulator}
-Os códigos fonte da simulação desenvolvida em Python são apresentados a seguir.
+Os códigos fonte da simulação desenvolvida em Python são apresentados a seguir. 
+O projeto completo também pode ser acessado no repositório GitHub: 
+\url{https://github.com/FelipeLenschow/Artigo-FOC-no-BLAC-vs-BLDC}.
 
 \subsection{Simulate.py}
 \lstinputlisting{../Sim/Simulate.py}
@@ -664,12 +692,7 @@ Os códigos fonte da simulação desenvolvida em Python são apresentados a segu
 \subsection{Sensors.py}
 \lstinputlisting{../Sim/Sensors.py}
 
-\begin{thebibliography}{00}
-\bibitem{pillay1989} P. Pillay and R. Krishnan, "Modeling, simulation, and analysis of permanent-magnet motor drives. I. The permanent-magnet synchronous motor drive," IEEE Transactions on Industry Applications, vol. 25, no. 2, pp. 265-273, March-April 1989.
-\bibitem{b2} MathWorks, "BLDC - Three-winding brushless direct current motor with trapezoidal flux distribution," [Online]. Available: https://www.mathworks.com/help/sps/ref/bldc.html.
-\bibitem{b4} MathWorks, "PMSM - Permanent Magnet Synchronous Motor," [Online]. Available: https://www.mathworks.com/help/sps/ref/pmsm.html.
-\bibitem{b3} Matheus Alexandre Bevilaqua, "Implementação do Controle de Velocidade de Motores Síncronos a Ímãs Permanentes em Plataforma LabVIEW FPGA", Universidade do Estado de Santa Catarina, 2015.
-% \bibitem{krause} P. C. Krause, O. Wasynczuk, and S. D. Sudhoff, \textit{Analysis of Electric Machinery and Drive Systems}, 2nd ed. Piscataway, NJ: IEEE Press, 2002.
-\end{thebibliography}
+\subsection{Transforms.py}
+\lstinputlisting{../Sim/Transforms.py}
 
 \end{document}
