@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-from PMSMMotor import PMSMMotor
+from BLACMotor import BLACMotor
 from BLDCMotor import BLDCMotor
 from FOCController import FOCController
 from Inverter import Inverter
@@ -11,7 +11,7 @@ if __name__ == "__main__":
     Ts = 1e-4
     t_end = 1.0
     
-    # motor = PMSMMotor(Ts)
+    # motor = BLACMotor(Ts)
     motor = BLDCMotor(Ts)
     controller = FOCController(Ts)
     inverter = Inverter()

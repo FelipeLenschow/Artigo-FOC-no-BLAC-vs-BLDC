@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-class PMSMMotor:
+class BLACMotor:
     def __init__(self, Ts):
         self.Ts = Ts
         self.Npp = 21.0

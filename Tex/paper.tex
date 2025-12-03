@@ -534,10 +534,55 @@ e atrito de Coulomb como distúrbios e o atrito viscoso desprezível frente
 
 Os ganhos obtidos para o controlador de velocidade são $k_{p} = 1.25$ e $k_{i} = 55$.
 
-\section{Resultados da Simulação}
-A simulação foi realizada utilizando Python. Os parâmetros do motor utilizados são apresentados na Tabela \ref{tab:motor_params}.
+\section{Simulação}
 
-O perfil de simulação consiste em:
+\subsection{Implementação}
+Para validar a análise comparativa, foi desenvolvido um simulador modular em 
+Python, projetado para flexibilidade e facilidade de manutenção, pode ser 
+visto no anexo \ref{app:simulator}. A estrutura 
+do simulador é baseada em componentes independentes que interagem através de 
+interfaces bem definidas, permitindo a substituição de modelos de motor e 
+estratégias de controle sem a necessidade de reescrever o código principal.
+
+A arquitetura do simulador é composta pelos seguintes módulos principais:
+\begin{itemize}
+    \item \textbf{Motor}: Define a física da máquina elétrica. Foram implementadas 
+    classes distintas para \texttt{BLDCMotor} e \texttt{BLACMotor}, ambas herdando 
+    ou seguindo uma interface comum que expõe métodos para o cálculo da dinâmica 
+    eletromecânica. Isso permite a troca direta entre os modelos de motor no script 
+    principal.
+    \item \textbf{Controller}: Implementa a lógica de controle, como o FOC. Este 
+    módulo recebe as referências e as medições dos sensores para calcular as tensões 
+    de referência.
+    \item \textbf{Inverter}: Modela o comportamento do inversor de potência, 
+    convertendo as tensões de referência em tensões aplicadas aos terminais do 
+    motor, considerando a tensão do barramento DC.
+    \item \textbf{Sensors}: Simula a aquisição de dados, fornecendo medições de 
+    corrente, posição e velocidade, podendo incluir ruídos ou atrasos para maior 
+    realismo.
+\end{itemize}
+
+O ciclo de simulação, executado em \texttt{Simulate.py}, opera em passos de tempo 
+discretos ($T_s$). Em cada iteração, o fluxo de dados segue a sequência:
+\begin{enumerate}
+    \item \textbf{Definição de Perfil}: Atualização das referências de velocidade 
+    e torque de carga conforme o tempo de simulação.
+    \item \textbf{Sensoriamento}: O módulo de sensores lê o estado atual do motor.
+    \item \textbf{Controle}: O controlador calcula as ações de controle baseadas 
+    nas leituras dos sensores e nas referências.
+    \item \textbf{Atuação}: O inversor aplica as tensões resultantes ao motor.
+    \item \textbf{Física}: O modelo do motor atualiza suas variáveis de estado 
+    (correntes, velocidade, posição) resolvendo as equações diferenciais do sistema.
+    \item \textbf{Registro}: As variáveis de interesse são armazenadas para 
+    análise posterior.
+\end{enumerate}
+
+Essa abordagem modular facilitou a comparação direta entre o desempenho do FOC em 
+motores BLDC e BLAC, garantindo que as mesmas condições de controle e simulação 
+fossem aplicadas a ambos os casos, isolando as diferenças intrínsecas das máquinas.
+ Os parâmetros do motor utilizados são apresentados na Tabela \ref{tab:motor_params}.
+
+O perfil de simulação seque o padrão desenvolvido em \cite{b3}, que consiste em:
 \begin{itemize}
     \item $t=0.0s$: Início em 40 RPM.
     \item $t=0.2s$: Degrau de torque de carga de 20 Nm aplicado.
@@ -546,21 +591,31 @@ O perfil de simulação consiste em:
     \item $t=0.8s$: Torque de carga removido.
 \end{itemize}
 
-A Fig. \ref{fig:results_speed_torque} e a Fig. \ref{fig:results_currents} mostram a resposta do sistema comparando o motor PMSM (BLAC) e o motor BLDC sob o mesmo controle FOC.
+\section{Resultados}
+A Fig. \ref{fig:results_speed_torque} e a Fig. \ref{fig:results_currents} mostram 
+a resposta do sistema comparando o motor BLAC e o motor BLDC sob o mesmo controle FOC.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=\columnwidth]{Figs/comparison_speed_torque.png}}
-\caption{Comparação de Velocidade e Torque entre PMSM e BLDC.}
+\caption{Comparação de Velocidade e Torque entre BLAC e BLDC.}
 \label{fig:results_speed_torque}
 \end{figure}
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=\columnwidth]{Figs/comparison_currents.png}}
-\caption{Comparação das Correntes $I_d$ e $I_q$ entre PMSM e BLDC.}
+\caption{Comparação das Correntes $I_d$ e $I_q$ entre BLAC e BLDC.}
 \label{fig:results_currents}
 \end{figure}
 
-O controlador de velocidade rastreia a referência de RPM com precisão para ambos os motores. No entanto, observa-se que o motor BLDC apresenta um ripple de torque significativo em comparação com o PMSM. Este ripple é intrínseco à aplicação do controle FOC (projetado para formas de onda senoidais) em uma máquina com força contra-eletromotriz trapezoidal. A frequência fundamental deste ripple é de 6 vezes a frequência elétrica, correspondendo às comutações que ocorreriam em um controle trapezoidal padrão.
+O controlador de velocidade rastreia a referência de RPM com precisão para ambos os 
+motores, mesmo tendo uma leve oscilação e ter o comportamento levemente mais rápido 
+no caso do BLDC. Já para o torque, observa-se que o motor BLDC apresenta um ripple 
+significativo em comparação com o BLAC. Este ripple é intrínseco à aplicação do controle 
+FOC, projetado para formas de onda senoidais, em uma máquina com força contra-eletromotriz 
+trapezoidal. A frequência fundamental deste ripple é de 6 vezes a frequência elétrica, 
+correspondendo às comutações que ocorreriam em um controle trapezoidal padrão, efeito 
+esse que pode ser observado no intervalo $0.4 < t < 0.6$ s, em que a velocidade é dobrada, e 
+a frequência do ripple de torque também é dobrada. 
 
 As correntes $I_d$ e $I_q$ no caso do BLDC (Fig. \ref{fig:results_currents}) mostram oscilações claras. O controlador PI de corrente tenta compensar a variação da Back-EMF trapezoidal, que não é constante no referencial $dq$, resultando nessas ondulações. Embora a velocidade média seja mantida, a qualidade do torque é degradada, o que pode gerar vibrações e ruído acústico em aplicações reais.
 
@@ -572,10 +627,11 @@ Os resultados confirmam que, embora o FOC possa controlar a velocidade de um mot
 \appendices
 
 \section{Código da Simulação}
+\label{app:simulator}
 Os códigos fonte da simulação desenvolvida em Python são apresentados a seguir.
 
-% \subsection{PMSMMotor.py}
-% \lstinputlisting{../Sim/PMSMMotor.py}
+% \subsection{BLACMotor.py}
+% \lstinputlisting{../Sim/BLACMotor.py}
 
 % \subsection{BLDCMotor.py}
 % \lstinputlisting{../Sim/BLDCMotor.py}
@@ -601,6 +657,7 @@ Os códigos fonte da simulação desenvolvida em Python são apresentados a segu
 \begin{thebibliography}{00}
 \bibitem{pillay1989} P. Pillay and R. Krishnan, "Modeling, simulation, and analysis of permanent-magnet motor drives. I. The permanent-magnet synchronous motor drive," IEEE Transactions on Industry Applications, vol. 25, no. 2, pp. 265-273, March-April 1989.
 \bibitem{b2} MathWorks, "BLDC - Three-winding brushless direct current motor with trapezoidal flux distribution," [Online]. Available: https://www.mathworks.com/help/sps/ref/bldc.html.
+\bibitem{b4} MathWorks, "PMSM - Permanent Magnet Synchronous Motor," [Online]. Available: https://www.mathworks.com/help/sps/ref/pmsm.html.
 \bibitem{b3} Matheus Alexandre Bevilaqua, "Implementação do Controle de Velocidade de Motores Síncronos a Ímãs Permanentes em Plataforma LabVIEW FPGA", Universidade do Estado de Santa Catarina, 2015.
 % \bibitem{krause} P. C. Krause, O. Wasynczuk, and S. D. Sudhoff, \textit{Analysis of Electric Machinery and Drive Systems}, 2nd ed. Piscataway, NJ: IEEE Press, 2002.
 \end{thebibliography}

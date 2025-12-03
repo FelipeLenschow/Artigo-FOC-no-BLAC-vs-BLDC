@@ -7,7 +7,7 @@ import os
 # Go up two levels from 'Tex/Figs' to 'Sim'
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'Sim'))
 
-from PMSMMotor import PMSMMotor
+from BLACMotor import BLACMotor
 from BLDCMotor import BLDCMotor
 from FOCController import FOCController
 from Inverter import Inverter
@@ -18,8 +18,8 @@ def run_simulation(motor_type):
     Ts = 1e-4
     t_end = 1.0
     
-    if motor_type == 'PMSM':
-        motor = PMSMMotor(Ts)
+    if motor_type == 'BLAC':
+        motor = BLACMotor(Ts)
     elif motor_type == 'BLDC':
         motor = BLDCMotor(Ts)
     else:
@@ -139,6 +139,6 @@ def plot_comparisons(pmsm_data, bldc_data):
     print(f"Figure saved to {output_path2}")
 
 if __name__ == "__main__":
-    pmsm_results = run_simulation('PMSM')
+    pmsm_results = run_simulation('BLAC')
     bldc_results = run_simulation('BLDC')
     plot_comparisons(pmsm_results, bldc_results)
